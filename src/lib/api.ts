@@ -253,6 +253,27 @@ export const api = {
     const doctorUser = mockUsers.find((u) => u.id === input.doctorId);
     const doctor = mockDoctors.find((d) => d.userId === input.doctorId);
     if (!doctorUser || !doctor) throw new Error("Doctor not found");
+
+    const start = new Date(input.scheduledAt).getTime();
+    const end = start + 30 * 60_000;
+
+    const slot = mockSlots.find(
+      (s) =>
+        s.doctorId === input.doctorId &&
+        new Date(s.startsAt).getTime() <= start &&
+        new Date(s.endsAt).getTime() >= end,
+    );
+    if (!slot) throw new Error("Selected time is not within doctor's availability");
+
+    const conflict = mockAppointments.find((a) => {
+      if (a.doctorId !== input.doctorId) return false;
+      if (a.status === "cancelled" || a.status === "completed") return false;
+      const aStart = new Date(a.scheduledAt).getTime();
+      const aEnd = aStart + a.durationMinutes * 60_000;
+      return aStart < end && aEnd > start;
+    });
+    if (conflict) throw new Error("Time conflicts with another appointment");
+
     const appt: Appointment = {
       id: uid("a"),
       patientId: input.patientId,
@@ -322,5 +343,72 @@ export const api = {
     };
     mockFiles.push(f);
     return delay(f);
+  },
+
+  // ---------- AVAILABILITY SLOTS ----------
+  async listSlots(params: {
+    doctorId: string;
+    onlyOpen?: boolean;
+    from?: string;
+    to?: string;
+  }): Promise<AvailabilitySlot[]> {
+    const from = params.from ? new Date(params.from).getTime() : Date.now();
+    const to = params.to
+      ? new Date(params.to).getTime()
+      : Date.now() + 30 * 86_400_000;
+    let slots = mockSlots
+      .filter((s) => s.doctorId === params.doctorId)
+      .filter((s) => {
+        const st = new Date(s.startsAt).getTime();
+        return st >= from && st <= to;
+      })
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+
+    if (params.onlyOpen) {
+      slots = slots.filter((s) => {
+        const st = new Date(s.startsAt).getTime();
+        const en = new Date(s.endsAt).getTime();
+        return !mockAppointments.some((a) => {
+          if (a.doctorId !== params.doctorId) return false;
+          if (a.status === "cancelled" || a.status === "completed") return false;
+          const aStart = new Date(a.scheduledAt).getTime();
+          const aEnd = aStart + a.durationMinutes * 60_000;
+          return aStart < en && aEnd > st;
+        });
+      });
+    }
+    return delay(slots);
+  },
+
+  async createSlot(input: {
+    doctorId: string;
+    startsAt: string;
+    endsAt: string;
+  }): Promise<AvailabilitySlot> {
+    const start = new Date(input.startsAt).getTime();
+    const end = new Date(input.endsAt).getTime();
+    if (end <= start) throw new Error("End time must be after start time");
+    const overlap = mockSlots.find(
+      (s) =>
+        s.doctorId === input.doctorId &&
+        new Date(s.startsAt).getTime() < end &&
+        new Date(s.endsAt).getTime() > start,
+    );
+    if (overlap) throw new Error("Overlaps an existing slot");
+    const slot: AvailabilitySlot = {
+      id: uid("s"),
+      doctorId: input.doctorId,
+      startsAt: input.startsAt,
+      endsAt: input.endsAt,
+    };
+    mockSlots.push(slot);
+    return delay(slot);
+  },
+
+  async deleteSlot(id: string): Promise<void> {
+    const idx = mockSlots.findIndex((s) => s.id === id);
+    if (idx === -1) throw new Error("Slot not found");
+    mockSlots.splice(idx, 1);
+    return delay(undefined);
   },
 };
