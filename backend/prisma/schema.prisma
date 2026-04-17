@@ -56,6 +56,18 @@ model DoctorProfile {
   licenseNumber   String  @unique
   yearsExperience Int?
   bio             String?
+  availabilitySlots AvailabilitySlot[]
+}
+
+model AvailabilitySlot {
+  id          String   @id @default(cuid())
+  doctorId    String
+  doctor      DoctorProfile @relation(fields: [doctorId], references: [userId], onDelete: Cascade)
+  startsAt    DateTime
+  endsAt      DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([doctorId, startsAt])
 }
 
 model Appointment {
