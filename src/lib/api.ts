@@ -32,6 +32,7 @@ import type {
   Appointment,
   AppointmentStatus,
   AuthSession,
+  AvailabilitySlot,
   DoctorProfile,
   MedicalFile,
   MedicalRecord,
