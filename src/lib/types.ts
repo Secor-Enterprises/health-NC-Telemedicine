@@ -73,6 +73,13 @@ export interface MedicalFile {
   uploadedAt: string;
 }
 
+export interface AvailabilitySlot {
+  id: string;
+  doctorId: string;
+  startsAt: string; // ISO
+  endsAt: string;   // ISO
+}
+
 export interface AuthSession {
   user: User;
   token: string;

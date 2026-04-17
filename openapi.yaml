@@ -26,6 +26,7 @@ tags:
   - name: Appointments
   - name: Records
   - name: Files
+  - name: Slots
 
 security:
   - bearerAuth: []
@@ -287,7 +288,68 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/MedicalFile" }
 
-components:
+  # ---------------- SLOTS ----------------
+  /slots:
+    get:
+      tags: [Slots]
+      summary: List availability slots for a doctor
+      parameters:
+        - in: query
+          name: doctorId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: to
+          schema: { type: string, format: date-time }
+        - in: query
+          name: onlyOpen
+          description: If true, exclude slots overlapping active appointments
+          schema: { type: boolean, default: false }
+      responses:
+        "200":
+          description: Slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AvailabilitySlot" }
+    post:
+      tags: [Slots]
+      summary: Create an availability slot (doctor)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [startsAt, endsAt]
+              properties:
+                startsAt: { type: string, format: date-time }
+                endsAt: { type: string, format: date-time }
+      responses:
+        "201":
+          description: Slot created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AvailabilitySlot" }
+        "409": { $ref: "#/components/responses/Error" }
+
+  /slots/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
+    delete:
+      tags: [Slots]
+      summary: Delete an availability slot
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/Error" }
+
   securitySchemes:
     bearerAuth:
       type: http
@@ -408,3 +470,12 @@ components:
         fileSize: { type: integer, minimum: 0 }
         url: { type: string, format: uri }
         uploadedAt: { type: string, format: date-time }
+
+    AvailabilitySlot:
+      type: object
+      required: [id, doctorId, startsAt, endsAt]
+      properties:
+        id: { type: string }
+        doctorId: { type: string }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }

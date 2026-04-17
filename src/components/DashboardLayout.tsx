@@ -22,6 +22,7 @@ const navByRole = {
   doctor: [
     { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { to: "/dashboard/appointments", label: "Schedule", icon: Calendar },
+    { to: "/dashboard/availability", label: "Availability", icon: Calendar },
     { to: "/dashboard/patients", label: "Patients", icon: Users },
   ],
   admin: [
