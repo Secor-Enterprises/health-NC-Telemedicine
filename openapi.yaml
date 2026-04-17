@@ -470,3 +470,12 @@ paths:
         fileSize: { type: integer, minimum: 0 }
         url: { type: string, format: uri }
         uploadedAt: { type: string, format: date-time }
+
+    AvailabilitySlot:
+      type: object
+      required: [id, doctorId, startsAt, endsAt]
+      properties:
+        id: { type: string }
+        doctorId: { type: string }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
