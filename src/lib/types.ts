@@ -1,0 +1,79 @@
+// ============================================================
+// Domain types — shared across the app and your backend contract
+// ============================================================
+
+export type UserRole = "patient" | "doctor" | "admin";
+
+export interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  createdAt: string; // ISO
+}
+
+export interface PatientProfile {
+  userId: string;
+  dateOfBirth?: string;
+  phone?: string;
+  address?: string;
+  bloodType?: string;
+  allergies?: string;
+  emergencyContact?: string;
+}
+
+export interface DoctorProfile {
+  userId: string;
+  specialty: string;
+  licenseNumber: string;
+  yearsExperience?: number;
+  bio?: string;
+}
+
+export type AppointmentStatus =
+  | "requested"
+  | "confirmed"
+  | "completed"
+  | "cancelled";
+
+export interface Appointment {
+  id: string;
+  patientId: string;
+  patientName: string;
+  doctorId: string;
+  doctorName: string;
+  specialty: string;
+  scheduledAt: string; // ISO
+  durationMinutes: number;
+  reason: string;
+  status: AppointmentStatus;
+  notes?: string;
+}
+
+export interface MedicalRecord {
+  id: string;
+  patientId: string;
+  authorId: string;
+  authorName: string;
+  title: string;
+  description: string;
+  diagnosis?: string;
+  treatment?: string;
+  createdAt: string;
+}
+
+export interface MedicalFile {
+  id: string;
+  patientId: string;
+  uploaderId: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  url: string;
+  uploadedAt: string;
+}
+
+export interface AuthSession {
+  user: User;
+  token: string;
+}
