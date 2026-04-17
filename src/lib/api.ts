@@ -117,6 +117,28 @@ const delay = <T>(value: T): Promise<T> =>
 const uid = (prefix: string) =>
   `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 
+const mockSlots: AvailabilitySlot[] = (() => {
+  const out: AvailabilitySlot[] = [];
+  const base = new Date();
+  base.setHours(0, 0, 0, 0);
+  for (let day = 1; day <= 5; day++) {
+    for (let h = 9; h < 12; h++) {
+      const start = new Date(base);
+      start.setDate(base.getDate() + day);
+      start.setHours(h, 0, 0, 0);
+      const end = new Date(start);
+      end.setMinutes(30);
+      out.push({
+        id: uid("s"),
+        doctorId: "u-doc-1",
+        startsAt: start.toISOString(),
+        endsAt: end.toISOString(),
+      });
+    }
+  }
+  return out;
+})();
+
 // ============================================================
 // Session helpers
 // ============================================================
