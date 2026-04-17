@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: caretide
+      POSTGRES_PASSWORD: caretide
+      POSTGRES_DB: caretide
+    ports:
+      - "5432:5432"
+    volumes:
+      - caretide_db:/var/lib/postgresql/data
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on: [db]
+    environment:
+      DATABASE_URL: postgresql://caretide:caretide@db:5432/caretide?schema=public
+      JWT_SECRET: change-me
+      PORT: 8080
+      CORS_ORIGIN: http://localhost:5173
+      UPLOAD_DIR: /app/uploads
+    ports:
+      - "8080:8080"
+    volumes:
+      - caretide_uploads:/app/uploads
+
+volumes:
+  caretide_db:
+  caretide_uploads:

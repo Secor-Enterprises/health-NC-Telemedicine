@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  patient
+  doctor
+  admin
+}
+
+enum AppointmentStatus {
+  requested
+  confirmed
+  completed
+  cancelled
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  role         UserRole
+  createdAt    DateTime @default(now())
+
+  doctorProfile     DoctorProfile?
+  patientProfile    PatientProfile?
+  patientAppointments  Appointment[]   @relation("PatientAppointments")
+  doctorAppointments   Appointment[]   @relation("DoctorAppointments")
+  authoredRecords      MedicalRecord[] @relation("AuthoredRecords")
+  patientRecords       MedicalRecord[] @relation("PatientRecords")
+  uploadedFiles        MedicalFile[]   @relation("UploadedFiles")
+  patientFiles         MedicalFile[]   @relation("PatientFiles")
+}
+
+model PatientProfile {
+  userId           String  @id
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth      DateTime?
+  phone            String?
+  address          String?
+  bloodType        String?
+  allergies        String?
+  emergencyContact String?
+}
+
+model DoctorProfile {
+  userId          String  @id
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialty       String
+  licenseNumber   String  @unique
+  yearsExperience Int?
+  bio             String?
+}
+
+model Appointment {
+  id              String            @id @default(cuid())
+  patientId       String
+  patient         User              @relation("PatientAppointments", fields: [patientId], references: [id])
+  doctorId        String
+  doctor          User              @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  scheduledAt     DateTime
+  durationMinutes Int               @default(30)
+  reason          String
+  status          AppointmentStatus @default(requested)
+  notes           String?
+  createdAt       DateTime          @default(now())
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([scheduledAt])
+}
+
+model MedicalRecord {
+  id          String   @id @default(cuid())
+  patientId   String
+  patient     User     @relation("PatientRecords", fields: [patientId], references: [id])
+  authorId    String
+  author      User     @relation("AuthoredRecords", fields: [authorId], references: [id])
+  title       String
+  description String
+  diagnosis   String?
+  treatment   String?
+  createdAt   DateTime @default(now())
+
+  @@index([patientId])
+}
+
+model MedicalFile {
+  id         String   @id @default(cuid())
+  patientId  String
+  patient    User     @relation("PatientFiles", fields: [patientId], references: [id])
+  uploaderId String
+  uploader   User     @relation("UploadedFiles", fields: [uploaderId], references: [id])
+  fileName   String
+  fileType   String
+  fileSize   Int
+  url        String
+  uploadedAt DateTime @default(now())
+
+  @@index([patientId])
+}
