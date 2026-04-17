@@ -1,0 +1,410 @@
+openapi: 3.0.3
+info:
+  title: Caretide Telemedicine API
+  description: |
+    REST API contract for the Caretide telemedicine portal frontend.
+    Derived from `src/lib/api.ts` and `src/lib/types.ts`.
+
+    All authenticated endpoints expect:
+      `Authorization: Bearer <token>`
+
+    Errors should respond with a JSON body:
+      `{ "message": "human readable error" }`
+  version: 1.0.0
+  contact:
+    name: Caretide
+servers:
+  - url: /api
+    description: Same-origin (default for VITE_API_BASE_URL)
+  - url: http://localhost:8080/api
+    description: Local onsite backend
+
+tags:
+  - name: Auth
+  - name: Doctors
+  - name: Patients
+  - name: Appointments
+  - name: Records
+  - name: Files
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ---------------- AUTH ----------------
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in with email + password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password, minLength: 8 }
+      responses:
+        "200":
+          description: Authenticated session
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthSession" }
+        "401": { $ref: "#/components/responses/Error" }
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Create a new account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, fullName, role]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password, minLength: 8 }
+                fullName: { type: string }
+                role: { $ref: "#/components/schemas/UserRole" }
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthSession" }
+        "409": { $ref: "#/components/responses/Error" }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Invalidate the current session token
+      responses:
+        "204": { description: Logged out }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get the currently authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "401": { $ref: "#/components/responses/Error" }
+
+  # ---------------- DOCTORS ----------------
+  /doctors:
+    get:
+      tags: [Doctors]
+      summary: List doctors (with public profile)
+      responses:
+        "200":
+          description: Doctors
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DoctorWithUser" }
+
+  # ---------------- PATIENTS ----------------
+  /patients:
+    get:
+      tags: [Patients]
+      summary: List patients (doctor/admin only)
+      responses:
+        "200":
+          description: Patients
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/User" }
+        "403": { $ref: "#/components/responses/Error" }
+
+  # ---------------- APPOINTMENTS ----------------
+  /appointments:
+    get:
+      tags: [Appointments]
+      summary: List appointments visible to the current user
+      description: |
+        Backend should filter by the caller's identity and role:
+        - patient: only their own appointments
+        - doctor:  only appointments where they are the provider
+        - admin:   all appointments
+      parameters:
+        - in: query
+          name: userId
+          schema: { type: string }
+          description: Optional — server should normally derive from auth token
+        - in: query
+          name: role
+          schema: { $ref: "#/components/schemas/UserRole" }
+      responses:
+        "200":
+          description: Appointments (sorted by scheduledAt asc)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Appointment" }
+    post:
+      tags: [Appointments]
+      summary: Request a new appointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [patientId, doctorId, scheduledAt, reason]
+              properties:
+                patientId: { type: string }
+                patientName: { type: string }
+                doctorId: { type: string }
+                scheduledAt: { type: string, format: date-time }
+                reason: { type: string }
+      responses:
+        "201":
+          description: Appointment created (status=requested)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Appointment" }
+
+  /appointments/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: string }
+    patch:
+      tags: [Appointments]
+      summary: Update appointment status or notes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { $ref: "#/components/schemas/AppointmentStatus" }
+                notes: { type: string }
+      responses:
+        "200":
+          description: Updated appointment
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Appointment" }
+        "404": { $ref: "#/components/responses/Error" }
+
+  # ---------------- RECORDS ----------------
+  /records:
+    get:
+      tags: [Records]
+      summary: List medical records for a patient
+      parameters:
+        - in: query
+          name: patientId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Records (sorted by createdAt desc)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MedicalRecord" }
+    post:
+      tags: [Records]
+      summary: Create a new medical record (doctor/admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [patientId, authorId, authorName, title, description]
+              properties:
+                patientId: { type: string }
+                authorId: { type: string }
+                authorName: { type: string }
+                title: { type: string }
+                description: { type: string }
+                diagnosis: { type: string }
+                treatment: { type: string }
+      responses:
+        "201":
+          description: Record created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MedicalRecord" }
+
+  # ---------------- FILES ----------------
+  /files:
+    get:
+      tags: [Files]
+      summary: List medical files for a patient
+      parameters:
+        - in: query
+          name: patientId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Files
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MedicalFile" }
+    post:
+      tags: [Files]
+      summary: Upload a medical file (multipart)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [patientId, uploaderId, file]
+              properties:
+                patientId: { type: string }
+                uploaderId: { type: string }
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Uploaded file metadata
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MedicalFile" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+
+    UserRole:
+      type: string
+      enum: [patient, doctor, admin]
+
+    AppointmentStatus:
+      type: string
+      enum: [requested, confirmed, completed, cancelled]
+
+    User:
+      type: object
+      required: [id, email, fullName, role, createdAt]
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+        fullName: { type: string }
+        role: { $ref: "#/components/schemas/UserRole" }
+        createdAt: { type: string, format: date-time }
+
+    AuthSession:
+      type: object
+      required: [user, token]
+      properties:
+        user: { $ref: "#/components/schemas/User" }
+        token: { type: string }
+
+    PatientProfile:
+      type: object
+      required: [userId]
+      properties:
+        userId: { type: string }
+        dateOfBirth: { type: string, format: date }
+        phone: { type: string }
+        address: { type: string }
+        bloodType: { type: string }
+        allergies: { type: string }
+        emergencyContact: { type: string }
+
+    DoctorProfile:
+      type: object
+      required: [userId, specialty, licenseNumber]
+      properties:
+        userId: { type: string }
+        specialty: { type: string }
+        licenseNumber: { type: string }
+        yearsExperience: { type: integer, minimum: 0 }
+        bio: { type: string }
+
+    DoctorWithUser:
+      allOf:
+        - $ref: "#/components/schemas/DoctorProfile"
+        - type: object
+          required: [user]
+          properties:
+            user: { $ref: "#/components/schemas/User" }
+
+    Appointment:
+      type: object
+      required:
+        [id, patientId, patientName, doctorId, doctorName, specialty,
+         scheduledAt, durationMinutes, reason, status]
+      properties:
+        id: { type: string }
+        patientId: { type: string }
+        patientName: { type: string }
+        doctorId: { type: string }
+        doctorName: { type: string }
+        specialty: { type: string }
+        scheduledAt: { type: string, format: date-time }
+        durationMinutes: { type: integer, minimum: 1 }
+        reason: { type: string }
+        status: { $ref: "#/components/schemas/AppointmentStatus" }
+        notes: { type: string }
+
+    MedicalRecord:
+      type: object
+      required: [id, patientId, authorId, authorName, title, description, createdAt]
+      properties:
+        id: { type: string }
+        patientId: { type: string }
+        authorId: { type: string }
+        authorName: { type: string }
+        title: { type: string }
+        description: { type: string }
+        diagnosis: { type: string }
+        treatment: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    MedicalFile:
+      type: object
+      required:
+        [id, patientId, uploaderId, fileName, fileType, fileSize, url, uploadedAt]
+      properties:
+        id: { type: string }
+        patientId: { type: string }
+        uploaderId: { type: string }
+        fileName: { type: string }
+        fileType: { type: string }
+        fileSize: { type: integer, minimum: 0 }
+        url: { type: string, format: uri }
+        uploadedAt: { type: string, format: date-time }
