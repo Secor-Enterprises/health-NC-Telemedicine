@@ -16,7 +16,7 @@ recordsRouter.get("/", requireAuth, async (req, res, next) => {
 
     const items = await prisma.medicalRecord.findMany({
       where: { patientId },
-      include: { author: true },
+      include: { author: true, facility: true },
       orderBy: { createdAt: "desc" },
     });
     res.json(items.map(toRecordDTO));
@@ -31,6 +31,7 @@ const createSchema = z.object({
   description: z.string().min(1),
   diagnosis: z.string().optional(),
   treatment: z.string().optional(),
+  facilityId: z.string().min(1).nullable().optional(),
 });
 
 recordsRouter.post(
@@ -42,7 +43,7 @@ recordsRouter.post(
       const body = createSchema.parse(req.body);
       const created = await prisma.medicalRecord.create({
         data: { ...body, authorId: req.auth!.sub },
-        include: { author: true },
+        include: { author: true, facility: true },
       });
       res.status(201).json(toRecordDTO(created));
     } catch (e) {

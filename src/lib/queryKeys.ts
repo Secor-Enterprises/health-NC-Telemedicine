@@ -22,4 +22,7 @@ export const queryKeys = {
     to?: string;
   }) => ["slots", params] as const,
   slotsByDoctor: (doctorId: string) => ["slots", { doctorId }] as const,
+
+  facilities: ["facilities"] as const,
+  facility: (id: string) => ["facilities", id] as const,
 };

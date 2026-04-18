@@ -14,6 +14,8 @@ import type {
   AuthSession,
   AvailabilitySlot,
   DoctorProfile,
+  Facility,
+  FacilityType,
   MedicalFile,
   MedicalRecord,
   User,
@@ -171,20 +173,27 @@ export const api = {
     doctorId: string;
     scheduledAt: string;
     reason: string;
+    facilityId?: string | null;
   }): Promise<Appointment> {
     return request("/appointments", {
       method: "POST",
       body: JSON.stringify({
+        patientId: input.patientId,
         doctorId: input.doctorId,
         scheduledAt: input.scheduledAt,
         reason: input.reason,
+        facilityId: input.facilityId ?? null,
       }),
     });
   },
 
   async updateAppointment(
     id: string,
-    patch: { status?: AppointmentStatus; notes?: string },
+    patch: {
+      status?: AppointmentStatus;
+      notes?: string;
+      facilityId?: string | null;
+    },
   ): Promise<Appointment> {
     return request(`/appointments/${id}`, {
       method: "PATCH",
@@ -252,5 +261,52 @@ export const api = {
 
   async deleteSlot(id: string): Promise<void> {
     return request(`/slots/${id}`, { method: "DELETE" });
+  },
+
+  // ---------- FACILITIES ----------
+  async listFacilities(params?: {
+    type?: FacilityType;
+    parentId?: string;
+  }): Promise<Facility[]> {
+    return request(`/facilities${qs({ ...(params ?? {}) })}`);
+  },
+
+  async getFacility(id: string): Promise<Facility> {
+    return request(`/facilities/${id}`);
+  },
+
+  async createFacility(input: {
+    name: string;
+    type: FacilityType;
+    parentId?: string | null;
+    address?: string | null;
+    phone?: string | null;
+    notes?: string | null;
+  }): Promise<Facility> {
+    return request("/facilities", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  async updateFacility(
+    id: string,
+    patch: Partial<{
+      name: string;
+      type: FacilityType;
+      parentId: string | null;
+      address: string | null;
+      phone: string | null;
+      notes: string | null;
+    }>,
+  ): Promise<Facility> {
+    return request(`/facilities/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
+  },
+
+  async deleteFacility(id: string): Promise<void> {
+    return request(`/facilities/${id}`, { method: "DELETE" });
   },
 };

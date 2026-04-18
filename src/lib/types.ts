@@ -48,6 +48,8 @@ export interface Appointment {
   reason: string;
   status: AppointmentStatus;
   notes?: string;
+  facilityId?: string | null;
+  facilityName?: string | null;
 }
 
 export interface MedicalRecord {
@@ -59,6 +61,8 @@ export interface MedicalRecord {
   description: string;
   diagnosis?: string;
   treatment?: string;
+  facilityId?: string | null;
+  facilityName?: string | null;
   createdAt: string;
 }
 
@@ -83,4 +87,19 @@ export interface AvailabilitySlot {
 export interface AuthSession {
   user: User;
   token: string;
+}
+
+export type FacilityType = "hospital" | "clinic";
+
+export interface Facility {
+  id: string;
+  name: string;
+  type: FacilityType;
+  parentId?: string | null;
+  parent?: { id: string; name: string; type: FacilityType } | null;
+  children?: { id: string; name: string; type: FacilityType }[];
+  address?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  createdAt?: string;
 }

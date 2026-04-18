@@ -15,6 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import type { AvailabilitySlot, DoctorProfile, User } from "@/lib/types";
@@ -30,10 +37,16 @@ const Doctors = () => {
   const [selected, setSelected] = useState<DoctorEntry | null>(null);
   const [chosenSlot, setChosenSlot] = useState<string | null>(null);
   const [reason, setReason] = useState("");
+  const [facilityId, setFacilityId] = useState<string>("");
 
   useEffect(() => {
     document.title = "Find a doctor · Caretide";
   }, []);
+
+  const { data: facilities = [] } = useQuery({
+    queryKey: queryKeys.facilities,
+    queryFn: () => api.listFacilities(),
+  });
 
   const { data: doctors = [] } = useQuery({
     queryKey: queryKeys.doctors,
@@ -56,6 +69,7 @@ const Doctors = () => {
         doctorId: selected!.userId,
         scheduledAt: chosenSlot!,
         reason,
+        facilityId: facilityId || null,
       }),
     onSuccess: () => {
       toast({ title: "Appointment requested", description: "We'll notify you on confirmation." });
@@ -75,6 +89,7 @@ const Doctors = () => {
   useEffect(() => {
     setChosenSlot(null);
     setReason("");
+    setFacilityId("");
   }, [selected]);
 
   const handleBook = (e: React.FormEvent) => {
@@ -188,6 +203,25 @@ const Doctors = () => {
                   placeholder="Briefly describe your symptoms or reason."
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label>Facility (optional)</Label>
+                <Select value={facilityId} onValueChange={setFacilityId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select hospital or clinic" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {facilities.map((f) => (
+                      <SelectItem key={f.id} value={f.id}>
+                        {f.type === "clinic" && f.parent
+                          ? `${f.parent.name} · ${f.name}`
+                          : f.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Button
                 type="submit"
                 className="w-full"
