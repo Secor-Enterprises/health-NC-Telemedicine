@@ -1,30 +1,10 @@
 /**
  * ============================================================
- * REST API CLIENT — wire this to your onsite backend
+ * REST API CLIENT — wired to the Express + Prisma backend
  * ============================================================
  *
- * Replace the mock implementations below with real `fetch()` calls.
- * Suggested endpoint contract:
- *
- *   POST   /auth/login                    { email, password } -> AuthSession
- *   POST   /auth/register                 { email, password, fullName, role } -> AuthSession
- *   POST   /auth/logout
- *   GET    /auth/me                       -> User
- *
- *   GET    /doctors                       -> Doctor[]
- *   GET    /patients                      -> User[] (doctor/admin only)
- *
- *   GET    /appointments?role=...&userId  -> Appointment[]
- *   POST   /appointments                  { doctorId, scheduledAt, reason } -> Appointment
- *   PATCH  /appointments/:id              { status?, notes? } -> Appointment
- *
- *   GET    /records?patientId=            -> MedicalRecord[]
- *   POST   /records                       { patientId, title, ... } -> MedicalRecord
- *
- *   GET    /files?patientId=              -> MedicalFile[]
- *   POST   /files  (multipart)            -> MedicalFile
- *
- * Auth: send the token from localStorage as `Authorization: Bearer <token>`.
+ * Configure the backend URL via VITE_API_BASE_URL (e.g. http://localhost:8080/api).
+ * Auth: JWT stored in localStorage and sent as `Authorization: Bearer <token>`.
  * ============================================================
  */
 
@@ -45,99 +25,6 @@ export const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "/api";
 
 const STORAGE_KEY = "telemed.session";
-const MOCK_DELAY = 350;
-
-// ============================================================
-// Mock in-memory store (REMOVE when wiring real backend)
-// ============================================================
-
-const mockUsers: (User & { password: string })[] = [
-  {
-    id: "u-doc-1",
-    email: "doctor@demo.com",
-    password: "demo1234",
-    fullName: "Dr. Sarah Chen",
-    role: "doctor",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "u-pat-1",
-    email: "patient@demo.com",
-    password: "demo1234",
-    fullName: "John Doe",
-    role: "patient",
-    createdAt: new Date().toISOString(),
-  },
-];
-
-const mockDoctors: DoctorProfile[] = [
-  {
-    userId: "u-doc-1",
-    specialty: "General Practice",
-    licenseNumber: "MD-10293",
-    yearsExperience: 12,
-    bio: "Board-certified GP focused on preventive care and chronic disease management.",
-  },
-];
-
-const mockAppointments: Appointment[] = [
-  {
-    id: "a-1",
-    patientId: "u-pat-1",
-    patientName: "John Doe",
-    doctorId: "u-doc-1",
-    doctorName: "Dr. Sarah Chen",
-    specialty: "General Practice",
-    scheduledAt: new Date(Date.now() + 86_400_000).toISOString(),
-    durationMinutes: 30,
-    reason: "Follow-up on blood pressure",
-    status: "confirmed",
-  },
-];
-
-const mockRecords: MedicalRecord[] = [
-  {
-    id: "r-1",
-    patientId: "u-pat-1",
-    authorId: "u-doc-1",
-    authorName: "Dr. Sarah Chen",
-    title: "Annual checkup",
-    description: "Routine physical, bloodwork ordered.",
-    diagnosis: "Healthy, mildly elevated BP",
-    treatment: "Lifestyle counseling, recheck in 3 months",
-    createdAt: new Date(Date.now() - 30 * 86_400_000).toISOString(),
-  },
-];
-
-const mockFiles: MedicalFile[] = [];
-
-const delay = <T>(value: T): Promise<T> =>
-  new Promise((res) => setTimeout(() => res(value), MOCK_DELAY));
-
-const uid = (prefix: string) =>
-  `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
-
-const mockSlots: AvailabilitySlot[] = (() => {
-  const out: AvailabilitySlot[] = [];
-  const base = new Date();
-  base.setHours(0, 0, 0, 0);
-  for (let day = 1; day <= 5; day++) {
-    for (let h = 9; h < 12; h++) {
-      const start = new Date(base);
-      start.setDate(base.getDate() + day);
-      start.setHours(h, 0, 0, 0);
-      const end = new Date(start);
-      end.setMinutes(30);
-      out.push({
-        id: uid("s"),
-        doctorId: "u-doc-1",
-        startsAt: start.toISOString(),
-        endsAt: end.toISOString(),
-      });
-    }
-  }
-  return out;
-})();
 
 // ============================================================
 // Session helpers
@@ -157,36 +44,72 @@ function setStoredSession(session: AuthSession | null) {
   else localStorage.removeItem(STORAGE_KEY);
 }
 
-// Real backend helper — uncomment and use when wiring fetch
-// async function request<T>(path: string, init?: RequestInit): Promise<T> {
-//   const session = getStoredSession();
-//   const res = await fetch(`${API_BASE_URL}${path}`, {
-//     ...init,
-//     headers: {
-//       "Content-Type": "application/json",
-//       ...(session ? { Authorization: `Bearer ${session.token}` } : {}),
-//       ...(init?.headers ?? {}),
-//     },
-//   });
-//   if (!res.ok) throw new Error((await res.text()) || res.statusText);
-//   return res.json() as Promise<T>;
-// }
+// ============================================================
+// HTTP helper
+// ============================================================
+
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const session = getStoredSession();
+  const isFormData =
+    typeof FormData !== "undefined" && init.body instanceof FormData;
+
+  const headers: Record<string, string> = {
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+    ...(session ? { Authorization: `Bearer ${session.token}` } : {}),
+    ...((init.headers as Record<string, string>) ?? {}),
+  };
+
+  const res = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
+
+  if (res.status === 204) return undefined as T;
+
+  const text = await res.text();
+  const data = text ? safeJSON(text) : null;
+
+  if (!res.ok) {
+    const message =
+      (data && typeof data === "object" && "message" in data
+        ? String((data as { message: unknown }).message)
+        : null) ||
+      text ||
+      res.statusText;
+    throw new Error(message);
+  }
+
+  return data as T;
+}
+
+function safeJSON(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+function qs(params: Record<string, string | undefined | boolean>): string {
+  const entries = Object.entries(params).filter(
+    ([, v]) => v !== undefined && v !== null && v !== "",
+  );
+  if (entries.length === 0) return "";
+  const sp = new URLSearchParams();
+  for (const [k, v] of entries) sp.set(k, String(v));
+  return `?${sp.toString()}`;
+}
 
 // ============================================================
-// Auth
+// API
 // ============================================================
 
 export const api = {
   // ---------- AUTH ----------
   async login(email: string, password: string): Promise<AuthSession> {
-    const found = mockUsers.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password,
-    );
-    if (!found) throw new Error("Invalid email or password");
-    const { password: _pw, ...user } = found;
-    const session: AuthSession = { user, token: `mock-token-${user.id}` };
+    const session = await request<AuthSession>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
     setStoredSession(session);
-    return delay(session);
+    return session;
   },
 
   async register(input: {
@@ -195,52 +118,51 @@ export const api = {
     fullName: string;
     role: UserRole;
   }): Promise<AuthSession> {
-    if (mockUsers.some((u) => u.email.toLowerCase() === input.email.toLowerCase())) {
-      throw new Error("An account with this email already exists");
-    }
-    const user: User = {
-      id: uid("u"),
-      email: input.email,
-      fullName: input.fullName,
-      role: input.role,
-      createdAt: new Date().toISOString(),
-    };
-    mockUsers.push({ ...user, password: input.password });
-    const session: AuthSession = { user, token: `mock-token-${user.id}` };
+    const session = await request<AuthSession>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
     setStoredSession(session);
-    return delay(session);
+    return session;
   },
 
   async logout(): Promise<void> {
+    try {
+      await request<void>("/auth/logout", { method: "POST" });
+    } catch {
+      // ignore — clear local session regardless
+    }
     setStoredSession(null);
-    return delay(undefined);
   },
 
   async me(): Promise<User | null> {
-    return delay(getStoredSession()?.user ?? null);
+    const session = getStoredSession();
+    if (!session) return null;
+    try {
+      return await request<User>("/auth/me");
+    } catch {
+      setStoredSession(null);
+      return null;
+    }
   },
 
   // ---------- DOCTORS ----------
   async listDoctors(): Promise<(DoctorProfile & { user: User })[]> {
-    const out = mockDoctors.map((d) => ({
-      ...d,
-      user: mockUsers.find((u) => u.id === d.userId)!,
-    }));
-    return delay(out);
+    return request("/doctors");
+  },
+
+  // ---------- PATIENTS ----------
+  async listPatients(): Promise<User[]> {
+    return request("/patients");
   },
 
   // ---------- APPOINTMENTS ----------
-  async listAppointments(params: {
+  async listAppointments(_params: {
     userId: string;
     role: UserRole;
   }): Promise<Appointment[]> {
-    const all =
-      params.role === "admin"
-        ? mockAppointments
-        : params.role === "doctor"
-          ? mockAppointments.filter((a) => a.doctorId === params.userId)
-          : mockAppointments.filter((a) => a.patientId === params.userId);
-    return delay([...all].sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt)));
+    // Backend infers scope from JWT (role + userId)
+    return request("/appointments");
   },
 
   async createAppointment(input: {
@@ -250,78 +172,43 @@ export const api = {
     scheduledAt: string;
     reason: string;
   }): Promise<Appointment> {
-    const doctorUser = mockUsers.find((u) => u.id === input.doctorId);
-    const doctor = mockDoctors.find((d) => d.userId === input.doctorId);
-    if (!doctorUser || !doctor) throw new Error("Doctor not found");
-
-    const start = new Date(input.scheduledAt).getTime();
-    const end = start + 30 * 60_000;
-
-    const slot = mockSlots.find(
-      (s) =>
-        s.doctorId === input.doctorId &&
-        new Date(s.startsAt).getTime() <= start &&
-        new Date(s.endsAt).getTime() >= end,
-    );
-    if (!slot) throw new Error("Selected time is not within doctor's availability");
-
-    const conflict = mockAppointments.find((a) => {
-      if (a.doctorId !== input.doctorId) return false;
-      if (a.status === "cancelled" || a.status === "completed") return false;
-      const aStart = new Date(a.scheduledAt).getTime();
-      const aEnd = aStart + a.durationMinutes * 60_000;
-      return aStart < end && aEnd > start;
+    return request("/appointments", {
+      method: "POST",
+      body: JSON.stringify({
+        doctorId: input.doctorId,
+        scheduledAt: input.scheduledAt,
+        reason: input.reason,
+      }),
     });
-    if (conflict) throw new Error("Time conflicts with another appointment");
-
-    const appt: Appointment = {
-      id: uid("a"),
-      patientId: input.patientId,
-      patientName: input.patientName,
-      doctorId: input.doctorId,
-      doctorName: doctorUser.fullName,
-      specialty: doctor.specialty,
-      scheduledAt: input.scheduledAt,
-      durationMinutes: 30,
-      reason: input.reason,
-      status: "requested",
-    };
-    mockAppointments.push(appt);
-    return delay(appt);
   },
 
   async updateAppointment(
     id: string,
     patch: { status?: AppointmentStatus; notes?: string },
   ): Promise<Appointment> {
-    const appt = mockAppointments.find((a) => a.id === id);
-    if (!appt) throw new Error("Appointment not found");
-    Object.assign(appt, patch);
-    return delay(appt);
+    return request(`/appointments/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
   },
 
   // ---------- MEDICAL RECORDS ----------
   async listRecords(patientId: string): Promise<MedicalRecord[]> {
-    return delay(
-      mockRecords
-        .filter((r) => r.patientId === patientId)
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    );
+    return request(`/records${qs({ patientId })}`);
   },
 
-  async createRecord(input: Omit<MedicalRecord, "id" | "createdAt">): Promise<MedicalRecord> {
-    const rec: MedicalRecord = {
-      ...input,
-      id: uid("r"),
-      createdAt: new Date().toISOString(),
-    };
-    mockRecords.push(rec);
-    return delay(rec);
+  async createRecord(
+    input: Omit<MedicalRecord, "id" | "createdAt">,
+  ): Promise<MedicalRecord> {
+    return request("/records", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
   },
 
   // ---------- MEDICAL FILES ----------
   async listFiles(patientId: string): Promise<MedicalFile[]> {
-    return delay(mockFiles.filter((f) => f.patientId === patientId));
+    return request(`/files${qs({ patientId })}`);
   },
 
   async uploadFile(input: {
@@ -329,20 +216,10 @@ export const api = {
     uploaderId: string;
     file: File;
   }): Promise<MedicalFile> {
-    // In production, POST multipart/form-data to /files
-    const url = URL.createObjectURL(input.file);
-    const f: MedicalFile = {
-      id: uid("f"),
-      patientId: input.patientId,
-      uploaderId: input.uploaderId,
-      fileName: input.file.name,
-      fileType: input.file.type,
-      fileSize: input.file.size,
-      url,
-      uploadedAt: new Date().toISOString(),
-    };
-    mockFiles.push(f);
-    return delay(f);
+    const fd = new FormData();
+    fd.append("patientId", input.patientId);
+    fd.append("file", input.file);
+    return request("/files", { method: "POST", body: fd });
   },
 
   // ---------- AVAILABILITY SLOTS ----------
@@ -352,32 +229,14 @@ export const api = {
     from?: string;
     to?: string;
   }): Promise<AvailabilitySlot[]> {
-    const from = params.from ? new Date(params.from).getTime() : Date.now();
-    const to = params.to
-      ? new Date(params.to).getTime()
-      : Date.now() + 30 * 86_400_000;
-    let slots = mockSlots
-      .filter((s) => s.doctorId === params.doctorId)
-      .filter((s) => {
-        const st = new Date(s.startsAt).getTime();
-        return st >= from && st <= to;
-      })
-      .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
-
-    if (params.onlyOpen) {
-      slots = slots.filter((s) => {
-        const st = new Date(s.startsAt).getTime();
-        const en = new Date(s.endsAt).getTime();
-        return !mockAppointments.some((a) => {
-          if (a.doctorId !== params.doctorId) return false;
-          if (a.status === "cancelled" || a.status === "completed") return false;
-          const aStart = new Date(a.scheduledAt).getTime();
-          const aEnd = aStart + a.durationMinutes * 60_000;
-          return aStart < en && aEnd > st;
-        });
-      });
-    }
-    return delay(slots);
+    return request(
+      `/slots${qs({
+        doctorId: params.doctorId,
+        onlyOpen: params.onlyOpen,
+        from: params.from,
+        to: params.to,
+      })}`,
+    );
   },
 
   async createSlot(input: {
@@ -385,30 +244,13 @@ export const api = {
     startsAt: string;
     endsAt: string;
   }): Promise<AvailabilitySlot> {
-    const start = new Date(input.startsAt).getTime();
-    const end = new Date(input.endsAt).getTime();
-    if (end <= start) throw new Error("End time must be after start time");
-    const overlap = mockSlots.find(
-      (s) =>
-        s.doctorId === input.doctorId &&
-        new Date(s.startsAt).getTime() < end &&
-        new Date(s.endsAt).getTime() > start,
-    );
-    if (overlap) throw new Error("Overlaps an existing slot");
-    const slot: AvailabilitySlot = {
-      id: uid("s"),
-      doctorId: input.doctorId,
-      startsAt: input.startsAt,
-      endsAt: input.endsAt,
-    };
-    mockSlots.push(slot);
-    return delay(slot);
+    return request("/slots", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
   },
 
   async deleteSlot(id: string): Promise<void> {
-    const idx = mockSlots.findIndex((s) => s.id === id);
-    if (idx === -1) throw new Error("Slot not found");
-    mockSlots.splice(idx, 1);
-    return delay(undefined);
+    return request(`/slots/${id}`, { method: "DELETE" });
   },
 };
