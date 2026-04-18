@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { CalendarIcon, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -14,6 +15,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 import type { AvailabilitySlot } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -22,67 +24,53 @@ const SLOT_LENGTH_MIN = 30;
 
 const Availability = () => {
   const { user } = useAuth();
-  const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
+  const qc = useQueryClient();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState("09:00");
-  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     document.title = "Availability · Caretide";
   }, []);
 
-  const refresh = async () => {
-    if (!user) return;
-    const s = await api.listSlots({ doctorId: user.id });
-    setSlots(s);
-  };
+  const { data: slots = [] } = useQuery({
+    queryKey: user ? queryKeys.slotsByDoctor(user.id) : ["slots", "anon"],
+    queryFn: () => api.listSlots({ doctorId: user!.id }),
+    enabled: !!user,
+  });
 
-  useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  const createMutation = useMutation({
+    mutationFn: (vars: { startsAt: string; endsAt: string }) =>
+      api.createSlot({ doctorId: user!.id, ...vars }),
+    onSuccess: (_, vars) => {
+      toast({ title: "Slot added", description: format(new Date(vars.startsAt), "PPP p") });
+      qc.invalidateQueries({ queryKey: queryKeys.slotsByDoctor(user!.id) });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Could not add slot", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.deleteSlot(id),
+    onSuccess: () => {
+      toast({ title: "Slot removed" });
+      qc.invalidateQueries({ queryKey: queryKeys.slotsByDoctor(user!.id) });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Delete failed", description: err.message, variant: "destructive" });
+    },
+  });
 
   if (!user) return null;
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!date) return;
     const [h, m] = time.split(":").map(Number);
     const start = new Date(date);
     start.setHours(h, m, 0, 0);
     const end = new Date(start.getTime() + SLOT_LENGTH_MIN * 60_000);
-    setBusy(true);
-    try {
-      await api.createSlot({
-        doctorId: user.id,
-        startsAt: start.toISOString(),
-        endsAt: end.toISOString(),
-      });
-      toast({ title: "Slot added", description: format(start, "PPP p") });
-      refresh();
-    } catch (err) {
-      toast({
-        title: "Could not add slot",
-        description: (err as Error).message,
-        variant: "destructive",
-      });
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await api.deleteSlot(id);
-      toast({ title: "Slot removed" });
-      refresh();
-    } catch (err) {
-      toast({
-        title: "Delete failed",
-        description: (err as Error).message,
-        variant: "destructive",
-      });
-    }
+    createMutation.mutate({ startsAt: start.toISOString(), endsAt: end.toISOString() });
   };
 
   const grouped = slots.reduce<Record<string, AvailabilitySlot[]>>((acc, s) => {
@@ -148,7 +136,7 @@ const Availability = () => {
                   required
                 />
               </div>
-              <Button type="submit" disabled={busy}>
+              <Button type="submit" disabled={createMutation.isPending}>
                 <Plus className="mr-2 h-4 w-4" /> Add slot
               </Button>
             </form>
@@ -183,8 +171,9 @@ const Availability = () => {
                           </span>
                           <button
                             type="button"
-                            onClick={() => handleDelete(s.id)}
-                            className="rounded-full p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() => deleteMutation.mutate(s.id)}
+                            disabled={deleteMutation.isPending}
+                            className="rounded-full p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                             aria-label="Remove slot"
                           >
                             <Trash2 className="h-3.5 w-3.5" />

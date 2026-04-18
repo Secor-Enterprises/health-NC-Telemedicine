@@ -1,23 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
-import type { Appointment } from "@/lib/types";
+import { queryKeys } from "@/lib/queryKeys";
 import { Users } from "lucide-react";
 
 const Patients = () => {
   const { user } = useAuth();
-  const [appts, setAppts] = useState<Appointment[]>([]);
 
   useEffect(() => {
     document.title = "Patients · Caretide";
   }, []);
 
-  useEffect(() => {
-    if (!user) return;
-    api.listAppointments({ userId: user.id, role: user.role }).then(setAppts);
-  }, [user]);
+  const { data: appts = [] } = useQuery({
+    queryKey: user ? queryKeys.appointments({ userId: user.id, role: user.role }) : ["appointments", "anon"],
+    queryFn: () => api.listAppointments({ userId: user!.id, role: user!.role }),
+    enabled: !!user,
+  });
 
   const patients = useMemo(() => {
     const map = new Map<string, { id: string; name: string; visits: number; last: string }>();

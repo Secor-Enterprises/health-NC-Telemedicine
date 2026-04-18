@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
-import type { Appointment, AppointmentStatus } from "@/lib/types";
+import { queryKeys } from "@/lib/queryKeys";
+import type { AppointmentStatus } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 import { Calendar } from "lucide-react";
 
@@ -24,35 +26,29 @@ const statusColor: Record<AppointmentStatus, string> = {
 
 const Appointments = () => {
   const { user } = useAuth();
-  const [appts, setAppts] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
 
   useEffect(() => {
     document.title = "Appointments · Caretide";
   }, []);
 
-  const refresh = async () => {
-    if (!user) return;
-    setLoading(true);
-    const a = await api.listAppointments({ userId: user.id, role: user.role });
-    setAppts(a);
-    setLoading(false);
-  };
+  const { data: appts = [], isLoading } = useQuery({
+    queryKey: user ? queryKeys.appointments({ userId: user.id, role: user.role }) : ["appointments", "anon"],
+    queryFn: () => api.listAppointments({ userId: user!.id, role: user!.role }),
+    enabled: !!user,
+  });
 
-  useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
-  const updateStatus = async (id: string, status: AppointmentStatus) => {
-    try {
-      await api.updateAppointment(id, { status });
-      toast({ title: "Updated", description: `Appointment ${status}.` });
-      refresh();
-    } catch (err) {
-      toast({ title: "Update failed", description: (err as Error).message, variant: "destructive" });
-    }
-  };
+  const updateMutation = useMutation({
+    mutationFn: (vars: { id: string; status: AppointmentStatus }) =>
+      api.updateAppointment(vars.id, { status: vars.status }),
+    onSuccess: (_, vars) => {
+      toast({ title: "Updated", description: `Appointment ${vars.status}.` });
+      qc.invalidateQueries({ queryKey: queryKeys.appointmentsAll });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Update failed", description: err.message, variant: "destructive" });
+    },
+  });
 
   if (!user) return null;
 
@@ -78,7 +74,7 @@ const Appointments = () => {
             <CardTitle className="font-display text-xl">All appointments</CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {isLoading ? (
               <p className="text-sm text-muted-foreground">Loading…</p>
             ) : appts.length === 0 ? (
               <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed p-10 text-center">
@@ -103,7 +99,9 @@ const Appointments = () => {
                         {a.status}
                       </span>
                       {(user.role === "doctor" || user.role === "admin") && (
-                        <Select onValueChange={(v) => updateStatus(a.id, v as AppointmentStatus)}>
+                        <Select
+                          onValueChange={(v) => updateMutation.mutate({ id: a.id, status: v as AppointmentStatus })}
+                        >
                           <SelectTrigger className="h-8 w-[140px] text-xs">
                             <SelectValue placeholder="Update" />
                           </SelectTrigger>

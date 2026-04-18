@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,75 +11,84 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { api } from "@/lib/api";
-import type { MedicalFile, MedicalRecord } from "@/lib/types";
+import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "@/hooks/use-toast";
 import { FileText, Upload, Plus } from "lucide-react";
 
 const Records = () => {
   const { user } = useAuth();
-  const [records, setRecords] = useState<MedicalRecord[]>([]);
-  const [files, setFiles] = useState<MedicalFile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
   const [recordOpen, setRecordOpen] = useState(false);
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     document.title = "Medical Records · Caretide";
   }, []);
 
-  const refresh = async () => {
-    if (!user) return;
-    setLoading(true);
-    const [r, f] = await Promise.all([api.listRecords(user.id), api.listFiles(user.id)]);
-    setRecords(r);
-    setFiles(f);
-    setLoading(false);
-  };
+  const recordsQuery = useQuery({
+    queryKey: user ? queryKeys.records(user.id) : ["records", "anon"],
+    queryFn: () => api.listRecords(user!.id),
+    enabled: !!user,
+  });
 
-  useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  const filesQuery = useQuery({
+    queryKey: user ? queryKeys.files(user.id) : ["files", "anon"],
+    queryFn: () => api.listFiles(user!.id),
+    enabled: !!user,
+  });
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadMutation = useMutation({
+    mutationFn: (file: File) =>
+      api.uploadFile({ patientId: user!.id, uploaderId: user!.id, file }),
+    onSuccess: () => {
+      toast({ title: "File uploaded" });
+      qc.invalidateQueries({ queryKey: queryKeys.files(user!.id) });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const recordMutation = useMutation({
+    mutationFn: (input: { title: string; description: string; diagnosis: string; treatment: string }) =>
+      api.createRecord({
+        patientId: user!.id,
+        authorId: user!.id,
+        authorName: user!.fullName,
+        ...input,
+      }),
+    onSuccess: () => {
+      toast({ title: "Record added" });
+      setRecordOpen(false);
+      qc.invalidateQueries({ queryKey: queryKeys.records(user!.id) });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
-    setUploading(true);
-    try {
-      await api.uploadFile({ patientId: user.id, uploaderId: user.id, file });
-      toast({ title: "File uploaded" });
-      refresh();
-    } catch (err) {
-      toast({ title: "Upload failed", description: (err as Error).message, variant: "destructive" });
-    } finally {
-      setUploading(false);
-      e.target.value = "";
-    }
+    uploadMutation.mutate(file, { onSettled: () => { e.target.value = ""; } });
   };
 
-  const handleAddRecord = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddRecord = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) return;
     const fd = new FormData(e.currentTarget);
-    try {
-      await api.createRecord({
-        patientId: user.id,
-        authorId: user.id,
-        authorName: user.fullName,
-        title: String(fd.get("title")),
-        description: String(fd.get("description")),
-        diagnosis: String(fd.get("diagnosis") || ""),
-        treatment: String(fd.get("treatment") || ""),
-      });
-      toast({ title: "Record added" });
-      setRecordOpen(false);
-      refresh();
-    } catch (err) {
-      toast({ title: "Failed", description: (err as Error).message, variant: "destructive" });
-    }
+    recordMutation.mutate({
+      title: String(fd.get("title")),
+      description: String(fd.get("description")),
+      diagnosis: String(fd.get("diagnosis") || ""),
+      treatment: String(fd.get("treatment") || ""),
+    });
   };
 
   if (!user) return null;
+
+  const records = recordsQuery.data ?? [];
+  const files = filesQuery.data ?? [];
+  const loading = recordsQuery.isLoading || filesQuery.isLoading;
 
   return (
     <DashboardLayout>
@@ -89,10 +99,10 @@ const Records = () => {
             <p className="text-muted-foreground">Visit history and uploaded documents.</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" asChild disabled={uploading}>
+            <Button variant="outline" asChild disabled={uploadMutation.isPending}>
               <Label htmlFor="file-upload" className="cursor-pointer">
                 <Upload className="mr-2 h-4 w-4" />
-                {uploading ? "Uploading…" : "Upload file"}
+                {uploadMutation.isPending ? "Uploading…" : "Upload file"}
                 <input id="file-upload" type="file" className="hidden" onChange={handleUpload} />
               </Label>
             </Button>
@@ -123,7 +133,9 @@ const Records = () => {
                       <Input id="treatment" name="treatment" />
                     </div>
                   </div>
-                  <Button type="submit" className="w-full">Save record</Button>
+                  <Button type="submit" className="w-full" disabled={recordMutation.isPending}>
+                    {recordMutation.isPending ? "Saving…" : "Save record"}
+                  </Button>
                 </form>
               </DialogContent>
             </Dialog>
