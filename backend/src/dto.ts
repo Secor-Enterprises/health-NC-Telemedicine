@@ -1,6 +1,7 @@
 import type {
   Appointment,
   DoctorProfile,
+  Facility,
   MedicalFile,
   MedicalRecord,
   User,
@@ -19,6 +20,7 @@ export function toUserDTO(u: User) {
 type ApptWithRels = Appointment & {
   patient: User;
   doctor: User & { doctorProfile: DoctorProfile | null };
+  facility?: Facility | null;
 };
 
 export function toAppointmentDTO(a: ApptWithRels) {
@@ -34,10 +36,14 @@ export function toAppointmentDTO(a: ApptWithRels) {
     reason: a.reason,
     status: a.status,
     notes: a.notes ?? undefined,
+    facilityId: a.facilityId ?? null,
+    facilityName: a.facility?.name ?? null,
   };
 }
 
-export function toRecordDTO(r: MedicalRecord & { author: User }) {
+export function toRecordDTO(
+  r: MedicalRecord & { author: User; facility?: Facility | null },
+) {
   return {
     id: r.id,
     patientId: r.patientId,
@@ -47,6 +53,8 @@ export function toRecordDTO(r: MedicalRecord & { author: User }) {
     description: r.description,
     diagnosis: r.diagnosis ?? undefined,
     treatment: r.treatment ?? undefined,
+    facilityId: r.facilityId ?? null,
+    facilityName: r.facility?.name ?? null,
     createdAt: r.createdAt.toISOString(),
   };
 }

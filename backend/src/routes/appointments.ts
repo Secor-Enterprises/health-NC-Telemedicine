@@ -21,6 +21,7 @@ appointmentsRouter.get("/", requireAuth, async (req, res, next) => {
       include: {
         patient: true,
         doctor: { include: { doctorProfile: true } },
+        facility: true,
       },
       orderBy: { scheduledAt: "asc" },
     });
@@ -35,6 +36,7 @@ const createSchema = z.object({
   doctorId: z.string().min(1),
   scheduledAt: z.string().datetime(),
   reason: z.string().min(1),
+  facilityId: z.string().min(1).nullable().optional(),
 });
 
 appointmentsRouter.post("/", requireAuth, async (req, res, next) => {
@@ -83,10 +85,12 @@ appointmentsRouter.post("/", requireAuth, async (req, res, next) => {
         durationMinutes,
         reason: body.reason,
         status: "requested",
+        facilityId: body.facilityId ?? null,
       },
       include: {
         patient: true,
         doctor: { include: { doctorProfile: true } },
+        facility: true,
       },
     });
     res.status(201).json(toAppointmentDTO(created));
@@ -98,6 +102,7 @@ appointmentsRouter.post("/", requireAuth, async (req, res, next) => {
 const patchSchema = z.object({
   status: z.enum(["requested", "confirmed", "completed", "cancelled"]).optional(),
   notes: z.string().optional(),
+  facilityId: z.string().min(1).nullable().optional(),
 });
 
 appointmentsRouter.patch("/:id", requireAuth, async (req, res, next) => {
@@ -116,6 +121,7 @@ appointmentsRouter.patch("/:id", requireAuth, async (req, res, next) => {
       include: {
         patient: true,
         doctor: { include: { doctorProfile: true } },
+        facility: true,
       },
     });
     res.json(toAppointmentDTO(updated));

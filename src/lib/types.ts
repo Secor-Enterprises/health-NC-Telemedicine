@@ -48,6 +48,8 @@ export interface Appointment {
   reason: string;
   status: AppointmentStatus;
   notes?: string;
+  facilityId?: string | null;
+  facilityName?: string | null;
 }
 
 export interface MedicalRecord {
@@ -59,6 +61,8 @@ export interface MedicalRecord {
   description: string;
   diagnosis?: string;
   treatment?: string;
+  facilityId?: string | null;
+  facilityName?: string | null;
   createdAt: string;
 }
 
