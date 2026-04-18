@@ -173,20 +173,27 @@ export const api = {
     doctorId: string;
     scheduledAt: string;
     reason: string;
+    facilityId?: string | null;
   }): Promise<Appointment> {
     return request("/appointments", {
       method: "POST",
       body: JSON.stringify({
+        patientId: input.patientId,
         doctorId: input.doctorId,
         scheduledAt: input.scheduledAt,
         reason: input.reason,
+        facilityId: input.facilityId ?? null,
       }),
     });
   },
 
   async updateAppointment(
     id: string,
-    patch: { status?: AppointmentStatus; notes?: string },
+    patch: {
+      status?: AppointmentStatus;
+      notes?: string;
+      facilityId?: string | null;
+    },
   ): Promise<Appointment> {
     return request(`/appointments/${id}`, {
       method: "PATCH",
