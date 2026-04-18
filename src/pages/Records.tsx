@@ -148,6 +148,23 @@ const Records = () => {
                       <Input id="treatment" name="treatment" />
                     </div>
                   </div>
+                  <div className="space-y-2">
+                    <Label>Facility (optional)</Label>
+                    <Select value={facilityId} onValueChange={setFacilityId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select hospital or clinic" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {facilities.map((f) => (
+                          <SelectItem key={f.id} value={f.id}>
+                            {f.type === "clinic" && f.parent
+                              ? `${f.parent.name} · ${f.name}`
+                              : f.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Button type="submit" className="w-full" disabled={recordMutation.isPending}>
                     {recordMutation.isPending ? "Saving…" : "Save record"}
                   </Button>
@@ -172,6 +189,7 @@ const Records = () => {
                     <span className="absolute -left-[29px] top-1.5 h-3 w-3 rounded-full border-2 border-background bg-primary" />
                     <div className="text-xs text-muted-foreground">
                       {new Date(r.createdAt).toLocaleDateString()} · {r.authorName}
+                      {r.facilityName ? ` · 📍 ${r.facilityName}` : ""}
                     </div>
                     <div className="mt-1 font-display text-lg font-semibold">{r.title}</div>
                     <p className="text-sm text-muted-foreground">{r.description}</p>
