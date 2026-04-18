@@ -10,6 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "@/hooks/use-toast";
@@ -19,10 +26,16 @@ const Records = () => {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [recordOpen, setRecordOpen] = useState(false);
+  const [facilityId, setFacilityId] = useState<string>("");
 
   useEffect(() => {
     document.title = "Medical Records · Caretide";
   }, []);
+
+  const { data: facilities = [] } = useQuery({
+    queryKey: queryKeys.facilities,
+    queryFn: () => api.listFacilities(),
+  });
 
   const recordsQuery = useQuery({
     queryKey: user ? queryKeys.records(user.id) : ["records", "anon"],
@@ -49,16 +62,17 @@ const Records = () => {
   });
 
   const recordMutation = useMutation({
-    mutationFn: (input: { title: string; description: string; diagnosis: string; treatment: string }) =>
+    mutationFn: (input: { title: string; description: string; diagnosis: string; treatment: string; facilityId: string | null }) =>
       api.createRecord({
         patientId: user!.id,
         authorId: user!.id,
         authorName: user!.fullName,
         ...input,
-      }),
+      } as Parameters<typeof api.createRecord>[0]),
     onSuccess: () => {
       toast({ title: "Record added" });
       setRecordOpen(false);
+      setFacilityId("");
       qc.invalidateQueries({ queryKey: queryKeys.records(user!.id) });
     },
     onError: (err: Error) => {
@@ -81,6 +95,7 @@ const Records = () => {
       description: String(fd.get("description")),
       diagnosis: String(fd.get("diagnosis") || ""),
       treatment: String(fd.get("treatment") || ""),
+      facilityId: facilityId || null,
     });
   };
 

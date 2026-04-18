@@ -104,6 +104,11 @@ const Appointments = () => {
                       <div className="text-sm text-muted-foreground">
                         {a.specialty} · {new Date(a.scheduledAt).toLocaleString()} · {a.durationMinutes}min
                       </div>
+                      {a.facilityName && (
+                        <div className="text-xs text-muted-foreground">
+                          📍 {a.facilityName}
+                        </div>
+                      )}
                       <div className="text-sm">{a.reason}</div>
                     </div>
                     <div className="flex items-center gap-2">
