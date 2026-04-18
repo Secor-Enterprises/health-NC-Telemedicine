@@ -15,7 +15,26 @@ import Patients from "./pages/Patients.tsx";
 import Availability from "./pages/Availability.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: (failureCount, error) => {
+        const msg = (error as Error)?.message?.toLowerCase() ?? "";
+        // Don't retry auth/permission errors
+        if (msg.includes("unauthorized") || msg.includes("forbidden") || msg.includes("not found")) {
+          return false;
+        }
+        return failureCount < 2;
+      },
+    },
+    mutations: {
+      retry: 0,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

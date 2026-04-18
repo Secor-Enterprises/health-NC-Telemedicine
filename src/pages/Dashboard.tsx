@@ -1,29 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
-import type { Appointment } from "@/lib/types";
+import { queryKeys } from "@/lib/queryKeys";
 import { Calendar, FileText, Stethoscope, Users, ArrowRight } from "lucide-react";
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const [appts, setAppts] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     document.title = "Dashboard · Caretide";
   }, []);
 
-  useEffect(() => {
-    if (!user) return;
-    api.listAppointments({ userId: user.id, role: user.role }).then((a) => {
-      setAppts(a);
-      setLoading(false);
-    });
-  }, [user]);
+  const { data: appts = [], isLoading } = useQuery({
+    queryKey: user ? queryKeys.appointments({ userId: user.id, role: user.role }) : ["appointments", "anon"],
+    queryFn: () => api.listAppointments({ userId: user!.id, role: user!.role }),
+    enabled: !!user,
+  });
 
   if (!user) return null;
 
@@ -49,7 +46,7 @@ const Dashboard = () => {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard icon={Calendar} label="Upcoming appointments" value={loading ? "—" : upcoming.length} />
+          <StatCard icon={Calendar} label="Upcoming appointments" value={isLoading ? "—" : upcoming.length} />
           {user.role === "patient" && (
             <>
               <StatCard icon={FileText} label="Records on file" value="View" to="/dashboard/records" />
@@ -78,7 +75,7 @@ const Dashboard = () => {
             </Button>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {isLoading ? (
               <p className="text-sm text-muted-foreground">Loading…</p>
             ) : upcoming.length === 0 ? (
               <div className="rounded-lg border border-dashed p-8 text-center">

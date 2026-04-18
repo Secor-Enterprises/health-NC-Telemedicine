@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Stethoscope, Calendar as CalendarIcon } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -15,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 import type { AvailabilitySlot, DoctorProfile, User } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -24,60 +26,61 @@ type DoctorEntry = DoctorProfile & { user: User };
 const Doctors = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [doctors, setDoctors] = useState<DoctorEntry[]>([]);
+  const qc = useQueryClient();
   const [selected, setSelected] = useState<DoctorEntry | null>(null);
-  const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [chosenSlot, setChosenSlot] = useState<string | null>(null);
   const [reason, setReason] = useState("");
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     document.title = "Find a doctor · Caretide";
   }, []);
 
-  useEffect(() => {
-    api.listDoctors().then(setDoctors);
-  }, []);
+  const { data: doctors = [] } = useQuery({
+    queryKey: queryKeys.doctors,
+    queryFn: () => api.listDoctors(),
+  });
 
-  useEffect(() => {
-    if (!selected) return;
-    setLoadingSlots(true);
-    setChosenSlot(null);
-    setReason("");
-    api
-      .listSlots({ doctorId: selected.userId, onlyOpen: true })
-      .then(setSlots)
-      .finally(() => setLoadingSlots(false));
-  }, [selected]);
+  const { data: slots = [], isLoading: loadingSlots } = useQuery({
+    queryKey: selected
+      ? queryKeys.slots({ doctorId: selected.userId, onlyOpen: true })
+      : ["slots", "none"],
+    queryFn: () => api.listSlots({ doctorId: selected!.userId, onlyOpen: true }),
+    enabled: !!selected,
+  });
 
-  const handleBook = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !selected || !chosenSlot) return;
-    setSubmitting(true);
-    try {
-      await api.createAppointment({
-        patientId: user.id,
-        patientName: user.fullName,
-        doctorId: selected.userId,
-        scheduledAt: chosenSlot,
+  const bookMutation = useMutation({
+    mutationFn: () =>
+      api.createAppointment({
+        patientId: user!.id,
+        patientName: user!.fullName,
+        doctorId: selected!.userId,
+        scheduledAt: chosenSlot!,
         reason,
-      });
-      toast({
-        title: "Appointment requested",
-        description: "We'll notify you on confirmation.",
-      });
+      }),
+    onSuccess: () => {
+      toast({ title: "Appointment requested", description: "We'll notify you on confirmation." });
+      qc.invalidateQueries({ queryKey: queryKeys.appointmentsAll });
+      if (selected) {
+        qc.invalidateQueries({ queryKey: queryKeys.slotsByDoctor(selected.userId) });
+      }
       setSelected(null);
       navigate("/dashboard/appointments");
-    } catch (err) {
-      toast({
-        title: "Booking failed",
-        description: (err as Error).message,
-        variant: "destructive",
-      });
-    } finally {
-      setSubmitting(false);
-    }
+    },
+    onError: (err: Error) => {
+      toast({ title: "Booking failed", description: err.message, variant: "destructive" });
+    },
+  });
+
+  // Reset booking form when doctor changes
+  useEffect(() => {
+    setChosenSlot(null);
+    setReason("");
+  }, [selected]);
+
+  const handleBook = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !selected || !chosenSlot) return;
+    bookMutation.mutate();
   };
 
   const grouped = slots.reduce<Record<string, AvailabilitySlot[]>>((acc, s) => {
@@ -188,9 +191,9 @@ const Doctors = () => {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={!chosenSlot || submitting}
+                disabled={!chosenSlot || bookMutation.isPending}
               >
-                {submitting ? "Requesting…" : "Request appointment"}
+                {bookMutation.isPending ? "Requesting…" : "Request appointment"}
               </Button>
             </form>
           </DialogContent>
