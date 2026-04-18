@@ -52,12 +52,24 @@ const Availability = () => {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.deleteSlot(id),
+    onMutate: async (id) => {
+      const queryKey = queryKeys.slotsByDoctor(user!.id);
+      await qc.cancelQueries({ queryKey });
+      const previous = qc.getQueryData<AvailabilitySlot[]>(queryKey);
+      qc.setQueryData<AvailabilitySlot[]>(queryKey, (old) =>
+        (old ?? []).filter((s) => s.id !== id),
+      );
+      return { previous, queryKey };
+    },
+    onError: (err: Error, _id, ctx) => {
+      if (ctx?.previous) qc.setQueryData(ctx.queryKey, ctx.previous);
+      toast({ title: "Delete failed", description: err.message, variant: "destructive" });
+    },
     onSuccess: () => {
       toast({ title: "Slot removed" });
-      qc.invalidateQueries({ queryKey: queryKeys.slotsByDoctor(user!.id) });
     },
-    onError: (err: Error) => {
-      toast({ title: "Delete failed", description: err.message, variant: "destructive" });
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.slotsByDoctor(user!.id) });
     },
   });
 
