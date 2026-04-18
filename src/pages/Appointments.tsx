@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
-import type { AppointmentStatus } from "@/lib/types";
+import type { Appointment, AppointmentStatus } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 import { Calendar } from "lucide-react";
 
@@ -41,12 +41,24 @@ const Appointments = () => {
   const updateMutation = useMutation({
     mutationFn: (vars: { id: string; status: AppointmentStatus }) =>
       api.updateAppointment(vars.id, { status: vars.status }),
+    onMutate: async (vars) => {
+      const queryKey = queryKeys.appointments({ userId: user!.id, role: user!.role });
+      await qc.cancelQueries({ queryKey });
+      const previous = qc.getQueryData<Appointment[]>(queryKey);
+      qc.setQueryData<Appointment[]>(queryKey, (old) =>
+        (old ?? []).map((a) => (a.id === vars.id ? { ...a, status: vars.status } : a)),
+      );
+      return { previous, queryKey };
+    },
+    onError: (err: Error, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(ctx.queryKey, ctx.previous);
+      toast({ title: "Update failed", description: err.message, variant: "destructive" });
+    },
     onSuccess: (_, vars) => {
       toast({ title: "Updated", description: `Appointment ${vars.status}.` });
-      qc.invalidateQueries({ queryKey: queryKeys.appointmentsAll });
     },
-    onError: (err: Error) => {
-      toast({ title: "Update failed", description: err.message, variant: "destructive" });
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.appointmentsAll });
     },
   });
 
