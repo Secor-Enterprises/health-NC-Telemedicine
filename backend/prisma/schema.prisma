@@ -20,6 +20,30 @@ enum AppointmentStatus {
   cancelled
 }
 
+enum FacilityType {
+  hospital
+  clinic
+}
+
+model Facility {
+  id          String       @id @default(cuid())
+  name        String
+  type        FacilityType
+  parentId    String?
+  parent      Facility?    @relation("FacilityHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Facility[]   @relation("FacilityHierarchy")
+  address     String?
+  phone       String?
+  notes       String?
+  createdAt   DateTime     @default(now())
+
+  appointments  Appointment[]
+  records       MedicalRecord[]
+
+  @@index([parentId])
+  @@index([type])
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -81,11 +105,14 @@ model Appointment {
   reason          String
   status          AppointmentStatus @default(requested)
   notes           String?
+  facilityId      String?
+  facility        Facility?         @relation(fields: [facilityId], references: [id], onDelete: SetNull)
   createdAt       DateTime          @default(now())
 
   @@index([patientId])
   @@index([doctorId])
   @@index([scheduledAt])
+  @@index([facilityId])
 }
 
 model MedicalRecord {
@@ -98,9 +125,12 @@ model MedicalRecord {
   description String
   diagnosis   String?
   treatment   String?
+  facilityId  String?
+  facility    Facility? @relation(fields: [facilityId], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now())
 
   @@index([patientId])
+  @@index([facilityId])
 }
 
 model MedicalFile {

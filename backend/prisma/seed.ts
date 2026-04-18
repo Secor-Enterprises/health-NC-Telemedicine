@@ -47,7 +47,46 @@ async function main() {
     },
   });
 
+  // Facilities — 3 hospitals, each with feeder clinics
+  const hospitals: { name: string; clinics: string[] }[] = [
+    {
+      name: "Postmasburg Hospital",
+      clinics: ["Postdene Clinic", "Boichoko Clinic", "Postmasburg Town Clinic"],
+    },
+    {
+      name: "Kuruman Hospital",
+      clinics: ["Kuruman Clinic 1", "Kuruman Clinic 2", "Kuruman Clinic 3"],
+    },
+    {
+      name: "Olifantshoek Hospital",
+      clinics: ["Olifantshoek Clinic 1", "Olifantshoek Clinic 2"],
+    },
+  ];
+
+  for (const h of hospitals) {
+    const existing = await prisma.facility.findFirst({
+      where: { name: h.name, type: "hospital" },
+    });
+    const hospital =
+      existing ??
+      (await prisma.facility.create({
+        data: { name: h.name, type: "hospital" },
+      }));
+
+    for (const clinicName of h.clinics) {
+      const clinicExists = await prisma.facility.findFirst({
+        where: { name: clinicName, parentId: hospital.id },
+      });
+      if (!clinicExists) {
+        await prisma.facility.create({
+          data: { name: clinicName, type: "clinic", parentId: hospital.id },
+        });
+      }
+    }
+  }
+
   console.log("✅ Seed complete: doctor@demo.com / patient@demo.com (demo1234)");
+  console.log("✅ Facilities seeded: 3 hospitals + 8 clinics");
 }
 
 main().finally(() => prisma.$disconnect());

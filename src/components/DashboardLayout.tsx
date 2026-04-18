@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   Calendar,
   FileText,
+  Hospital,
   LayoutDashboard,
   LogOut,
   Stethoscope,
@@ -18,18 +19,21 @@ const navByRole = {
     { to: "/dashboard/appointments", label: "Appointments", icon: Calendar },
     { to: "/dashboard/records", label: "My Records", icon: FileText },
     { to: "/dashboard/doctors", label: "Find a Doctor", icon: Stethoscope },
+    { to: "/dashboard/facilities", label: "Facilities", icon: Hospital },
   ],
   doctor: [
     { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { to: "/dashboard/appointments", label: "Schedule", icon: Calendar },
     { to: "/dashboard/availability", label: "Availability", icon: Calendar },
     { to: "/dashboard/patients", label: "Patients", icon: Users },
+    { to: "/dashboard/facilities", label: "Facilities", icon: Hospital },
   ],
   admin: [
     { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { to: "/dashboard/appointments", label: "All Appointments", icon: Calendar },
     { to: "/dashboard/doctors", label: "Doctors", icon: Stethoscope },
     { to: "/dashboard/patients", label: "Patients", icon: Users },
+    { to: "/dashboard/facilities", label: "Facilities", icon: Hospital },
   ],
 } as const;
 

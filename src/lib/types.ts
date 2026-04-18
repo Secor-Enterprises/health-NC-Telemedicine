@@ -84,3 +84,18 @@ export interface AuthSession {
   user: User;
   token: string;
 }
+
+export type FacilityType = "hospital" | "clinic";
+
+export interface Facility {
+  id: string;
+  name: string;
+  type: FacilityType;
+  parentId?: string | null;
+  parent?: { id: string; name: string; type: FacilityType } | null;
+  children?: { id: string; name: string; type: FacilityType }[];
+  address?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  createdAt?: string;
+}

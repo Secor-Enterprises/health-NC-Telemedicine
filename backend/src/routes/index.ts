@@ -6,6 +6,7 @@ import { appointmentsRouter } from "./appointments";
 import { recordsRouter } from "./records";
 import { filesRouter } from "./files";
 import { slotsRouter } from "./slots";
+import { facilitiesRouter } from "./facilities";
 
 export const router = Router();
 router.use("/auth", authRouter);
@@ -15,3 +16,4 @@ router.use("/appointments", appointmentsRouter);
 router.use("/records", recordsRouter);
 router.use("/files", filesRouter);
 router.use("/slots", slotsRouter);
+router.use("/facilities", facilitiesRouter);
