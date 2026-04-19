@@ -7,6 +7,7 @@ import { recordsRouter } from "./records";
 import { filesRouter } from "./files";
 import { slotsRouter } from "./slots";
 import { facilitiesRouter } from "./facilities";
+import { apiClientsRouter, fhirDataRouter } from "./apiClients";
 
 export const router = Router();
 router.use("/auth", authRouter);
@@ -17,3 +18,5 @@ router.use("/records", recordsRouter);
 router.use("/files", filesRouter);
 router.use("/slots", slotsRouter);
 router.use("/facilities", facilitiesRouter);
+router.use("/api-clients", apiClientsRouter);
+router.use("/fhir-data", fhirDataRouter);
