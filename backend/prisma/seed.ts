@@ -85,8 +85,20 @@ async function main() {
     }
   }
 
+  // Assign demo doctor to Postmasburg Hospital as primary facility
+  const postmasburg = await prisma.facility.findFirst({
+    where: { name: "Postmasburg Hospital", type: "hospital" },
+  });
+  if (postmasburg) {
+    await prisma.doctorProfile.update({
+      where: { userId: doctor.id },
+      data: { primaryFacilityId: postmasburg.id },
+    });
+  }
+
   console.log("✅ Seed complete: doctor@demo.com / patient@demo.com (demo1234)");
   console.log("✅ Facilities seeded: 3 hospitals + 8 clinics");
+  console.log("✅ Demo doctor assigned to Postmasburg Hospital");
 }
 
 main().finally(() => prisma.$disconnect());

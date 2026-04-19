@@ -149,8 +149,25 @@ export const api = {
   },
 
   // ---------- DOCTORS ----------
-  async listDoctors(): Promise<(DoctorProfile & { user: User })[]> {
-    return request("/doctors");
+  async listDoctors(params?: {
+    facilityId?: string;
+  }): Promise<(DoctorProfile & { user: User })[]> {
+    return request(`/doctors${qs({ facilityId: params?.facilityId })}`);
+  },
+
+  async updateDoctor(
+    userId: string,
+    patch: {
+      primaryFacilityId?: string | null;
+      specialty?: string;
+      bio?: string | null;
+      yearsExperience?: number | null;
+    },
+  ): Promise<DoctorProfile & { user: User }> {
+    return request(`/doctors/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
   },
 
   // ---------- PATIENTS ----------
