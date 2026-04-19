@@ -1,5 +1,6 @@
 import { PrismaClient, UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { generateApiKey } from "../src/middleware/apiKey";
 
 const prisma = new PrismaClient();
 
@@ -37,15 +38,31 @@ async function main() {
     },
   });
 
-  await prisma.appointment.create({
-    data: {
-      patientId: patient.id,
-      doctorId: doctor.id,
-      scheduledAt: new Date(Date.now() + 86_400_000),
-      reason: "Follow-up on blood pressure",
-      status: "confirmed",
+  const admin = await prisma.user.upsert({
+    where: { email: "admin@demo.com" },
+    update: {},
+    create: {
+      email: "admin@demo.com",
+      fullName: "Caretide Admin",
+      role: UserRole.admin,
+      passwordHash,
     },
   });
+
+  const existingAppt = await prisma.appointment.findFirst({
+    where: { patientId: patient.id, doctorId: doctor.id },
+  });
+  if (!existingAppt) {
+    await prisma.appointment.create({
+      data: {
+        patientId: patient.id,
+        doctorId: doctor.id,
+        scheduledAt: new Date(Date.now() + 86_400_000),
+        reason: "Follow-up on blood pressure",
+        status: "confirmed",
+      },
+    });
+  }
 
   // Facilities — 3 hospitals, each with feeder clinics
   const hospitals: { name: string; clinics: string[] }[] = [
@@ -85,7 +102,6 @@ async function main() {
     }
   }
 
-  // Assign demo doctor to Postmasburg Hospital as primary facility
   const postmasburg = await prisma.facility.findFirst({
     where: { name: "Postmasburg Hospital", type: "hospital" },
   });
@@ -96,9 +112,83 @@ async function main() {
     });
   }
 
-  console.log("✅ Seed complete: doctor@demo.com / patient@demo.com (demo1234)");
-  console.log("✅ Facilities seeded: 3 hospitals + 8 clinics");
-  console.log("✅ Demo doctor assigned to Postmasburg Hospital");
+  // ---------- Demo FHIR API client ----------
+  const existingClient = await prisma.apiClient.findFirst({
+    where: { name: "Demo Lab System" },
+  });
+  if (!existingClient) {
+    const { key, prefix, hash } = generateApiKey();
+    await prisma.apiClient.create({
+      data: {
+        name: "Demo Lab System",
+        keyHash: hash,
+        keyPrefix: prefix,
+        scopes: "patient.read observation.* medicationrequest.* organization.read practitioner.read",
+      },
+    });
+    console.log(`🔑 Demo FHIR API key (save it now): ${key}`);
+  }
+
+  // ---------- Demo observations & medications ----------
+  const obsCount = await prisma.observation.count({ where: { patientId: patient.id } });
+  if (obsCount === 0) {
+    await prisma.observation.createMany({
+      data: [
+        {
+          patientId: patient.id,
+          performerId: doctor.id,
+          status: "final",
+          code: "718-7",
+          display: "Hemoglobin",
+          valueNumber: 14.2,
+          unit: "g/dL",
+          category: "laboratory",
+          effectiveAt: new Date(Date.now() - 7 * 86_400_000),
+          sourceSystem: "Demo Lab System",
+        },
+        {
+          patientId: patient.id,
+          performerId: doctor.id,
+          status: "final",
+          code: "8480-6",
+          display: "Systolic blood pressure",
+          valueNumber: 128,
+          unit: "mmHg",
+          category: "vital-signs",
+          effectiveAt: new Date(Date.now() - 1 * 86_400_000),
+        },
+        {
+          patientId: patient.id,
+          performerId: doctor.id,
+          status: "final",
+          code: "8462-4",
+          display: "Diastolic blood pressure",
+          valueNumber: 82,
+          unit: "mmHg",
+          category: "vital-signs",
+          effectiveAt: new Date(Date.now() - 1 * 86_400_000),
+        },
+      ],
+    });
+  }
+
+  const medCount = await prisma.medicationRequest.count({ where: { patientId: patient.id } });
+  if (medCount === 0) {
+    await prisma.medicationRequest.create({
+      data: {
+        patientId: patient.id,
+        prescriberId: doctor.id,
+        status: "active",
+        medicationCode: "197361",
+        medicationName: "Lisinopril 10 MG Oral Tablet",
+        dosage: "1 tablet by mouth daily",
+        frequency: "QD",
+        sourceSystem: "Demo Pharmacy",
+      },
+    });
+  }
+
+  console.log("✅ Seed complete: doctor@demo.com / patient@demo.com / admin@demo.com (demo1234)");
 }
 
 main().finally(() => prisma.$disconnect());
