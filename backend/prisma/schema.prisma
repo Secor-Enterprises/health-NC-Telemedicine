@@ -39,6 +39,7 @@ model Facility {
 
   appointments  Appointment[]
   records       MedicalRecord[]
+  primaryDoctors DoctorProfile[] @relation("DoctorPrimaryFacility")
 
   @@index([parentId])
   @@index([type])
@@ -80,7 +81,11 @@ model DoctorProfile {
   licenseNumber   String  @unique
   yearsExperience Int?
   bio             String?
+  primaryFacilityId String?
+  primaryFacility   Facility? @relation("DoctorPrimaryFacility", fields: [primaryFacilityId], references: [id], onDelete: SetNull)
   availabilitySlots AvailabilitySlot[]
+
+  @@index([primaryFacilityId])
 }
 
 model AvailabilitySlot {

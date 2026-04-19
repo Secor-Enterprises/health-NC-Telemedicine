@@ -28,6 +28,13 @@ export interface DoctorProfile {
   licenseNumber: string;
   yearsExperience?: number;
   bio?: string;
+  primaryFacilityId?: string | null;
+  primaryFacility?: {
+    id: string;
+    name: string;
+    type: FacilityType;
+    parent?: { id: string; name: string; type: FacilityType } | null;
+  } | null;
 }
 
 export type AppointmentStatus =
