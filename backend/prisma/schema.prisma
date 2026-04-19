@@ -25,6 +25,24 @@ enum FacilityType {
   clinic
 }
 
+enum ObservationStatus {
+  registered
+  preliminary
+  final
+  amended
+  cancelled
+}
+
+enum MedicationRequestStatus {
+  active
+  on_hold
+  cancelled
+  completed
+  stopped
+  draft
+  unknown
+}
+
 model Facility {
   id          String       @id @default(cuid())
   name        String
@@ -61,6 +79,11 @@ model User {
   patientRecords       MedicalRecord[] @relation("PatientRecords")
   uploadedFiles        MedicalFile[]   @relation("UploadedFiles")
   patientFiles         MedicalFile[]   @relation("PatientFiles")
+
+  patientObservations    Observation[]        @relation("PatientObservations")
+  performedObservations  Observation[]        @relation("PerformerObservations")
+  patientMedReqs         MedicationRequest[]  @relation("PatientMedicationRequests")
+  prescriberMedReqs      MedicationRequest[]  @relation("PrescriberMedicationRequests")
 }
 
 model PatientProfile {
@@ -151,4 +174,89 @@ model MedicalFile {
   uploadedAt DateTime @default(now())
 
   @@index([patientId])
+}
+
+// ============================================================
+// FHIR R4 interoperability
+// ============================================================
+
+model ApiClient {
+  id          String       @id @default(cuid())
+  name        String
+  // Store only the SHA-256 hash of the API key — never the plaintext.
+  keyHash     String       @unique
+  keyPrefix   String       // first 8 chars of the key, for display
+  // Space-separated SMART-style scopes, e.g. "patient.read observation.write"
+  scopes      String
+  active      Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  lastUsedAt  DateTime?
+
+  events      ApiClientEvent[]
+
+  @@index([active])
+}
+
+model ApiClientEvent {
+  id          String    @id @default(cuid())
+  clientId    String
+  client      ApiClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  method      String
+  path        String
+  status      Int
+  resource    String?
+  createdAt   DateTime  @default(now())
+
+  @@index([clientId, createdAt])
+}
+
+model Observation {
+  id            String            @id @default(cuid())
+  patientId     String
+  patient       User              @relation("PatientObservations", fields: [patientId], references: [id], onDelete: Cascade)
+  performerId   String?
+  performer     User?             @relation("PerformerObservations", fields: [performerId], references: [id], onDelete: SetNull)
+  status        ObservationStatus @default(final)
+  // LOINC code identifying the observation/lab test
+  code          String
+  display       String
+  // Numeric or string value
+  valueNumber   Float?
+  valueString   String?
+  unit          String?
+  // For panels (e.g. CBC), category like "laboratory" | "vital-signs"
+  category      String?
+  effectiveAt   DateTime
+  note          String?
+  // Optional source reference (e.g. external system message id)
+  sourceSystem  String?
+  sourceId      String?
+  createdAt     DateTime          @default(now())
+
+  @@index([patientId, effectiveAt])
+  @@index([code])
+  @@unique([sourceSystem, sourceId])
+}
+
+model MedicationRequest {
+  id            String                  @id @default(cuid())
+  patientId     String
+  patient       User                    @relation("PatientMedicationRequests", fields: [patientId], references: [id], onDelete: Cascade)
+  prescriberId  String?
+  prescriber    User?                   @relation("PrescriberMedicationRequests", fields: [prescriberId], references: [id], onDelete: SetNull)
+  status        MedicationRequestStatus @default(active)
+  // RxNorm code or free text
+  medicationCode String?
+  medicationName String
+  dosage         String?
+  // e.g. "BID", "QD", "PRN"
+  frequency      String?
+  authoredOn     DateTime                @default(now())
+  note           String?
+  sourceSystem   String?
+  sourceId       String?
+  createdAt      DateTime                @default(now())
+
+  @@index([patientId, authoredOn])
+  @@unique([sourceSystem, sourceId])
 }

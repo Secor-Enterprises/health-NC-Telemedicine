@@ -14,6 +14,7 @@ import Doctors from "./pages/Doctors.tsx";
 import Patients from "./pages/Patients.tsx";
 import Availability from "./pages/Availability.tsx";
 import Facilities from "./pages/Facilities.tsx";
+import Integrations from "./pages/Integrations.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient({
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/dashboard/patients" element={<ProtectedRoute roles={["doctor", "admin"]}><Patients /></ProtectedRoute>} />
             <Route path="/dashboard/availability" element={<ProtectedRoute roles={["doctor"]}><Availability /></ProtectedRoute>} />
             <Route path="/dashboard/facilities" element={<ProtectedRoute><Facilities /></ProtectedRoute>} />
+            <Route path="/dashboard/integrations" element={<ProtectedRoute roles={["admin"]}><Integrations /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

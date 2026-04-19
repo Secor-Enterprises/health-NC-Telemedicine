@@ -10,6 +10,7 @@ import {
   Stethoscope,
   Users,
   HeartPulse,
+  Plug,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +35,7 @@ const navByRole = {
     { to: "/dashboard/doctors", label: "Doctors", icon: Stethoscope },
     { to: "/dashboard/patients", label: "Patients", icon: Users },
     { to: "/dashboard/facilities", label: "Facilities", icon: Hospital },
+    { to: "/dashboard/integrations", label: "Integrations", icon: Plug },
   ],
 } as const;
 

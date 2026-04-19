@@ -110,3 +110,55 @@ export interface Facility {
   notes?: string | null;
   createdAt?: string;
 }
+
+// ============================================================
+// FHIR R4 interoperability — Integrations
+// ============================================================
+
+export interface ApiClient {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  scopes: string;
+  active: boolean;
+  createdAt: string;
+  lastUsedAt?: string | null;
+  eventCount?: number;
+  /** Plaintext key — only returned once from create. */
+  apiKey?: string;
+}
+
+export interface ApiClientEvent {
+  id: string;
+  method: string;
+  path: string;
+  status: number;
+  resource?: string | null;
+  createdAt: string;
+}
+
+export interface PatientObservation {
+  id: string;
+  code: string;
+  display: string;
+  valueNumber?: number | null;
+  valueString?: string | null;
+  unit?: string | null;
+  category?: string | null;
+  status: string;
+  effectiveAt: string;
+  performerName?: string | null;
+  sourceSystem?: string | null;
+}
+
+export interface PatientMedicationRequest {
+  id: string;
+  medicationName: string;
+  medicationCode?: string | null;
+  dosage?: string | null;
+  frequency?: string | null;
+  status: string;
+  authoredOn: string;
+  prescriberName?: string | null;
+  sourceSystem?: string | null;
+}

@@ -27,4 +27,9 @@ export const queryKeys = {
 
   facilities: ["facilities"] as const,
   facility: (id: string) => ["facilities", id] as const,
+
+  apiClients: ["apiClients"] as const,
+  apiClientEvents: (id: string) => ["apiClients", id, "events"] as const,
+  observations: (patientId: string) => ["observations", patientId] as const,
+  medicationRequests: (patientId: string) => ["medicationRequests", patientId] as const,
 };

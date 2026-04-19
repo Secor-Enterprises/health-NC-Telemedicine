@@ -6,6 +6,7 @@ import morgan from "morgan";
 import path from "path";
 import fs from "fs";
 import { router } from "./routes";
+import { fhirRouter } from "./routes/fhir";
 import { errorHandler } from "./middleware/error";
 
 const app = express();
@@ -19,15 +20,17 @@ const origins = (process.env.CORS_ORIGIN || "*")
 
 app.use(helmet());
 app.use(cors({ origin: origins.includes("*") ? true : origins, credentials: true }));
-app.use(express.json({ limit: "2mb" }));
+app.use(express.json({ limit: "2mb", type: ["application/json", "application/fhir+json"] }));
 app.use(morgan("tiny"));
 app.use("/uploads", express.static(UPLOAD_DIR));
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use("/api", router);
+app.use("/fhir", fhirRouter);
 
 app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`🚀 Caretide API listening on http://localhost:${PORT}`);
+  console.log(`   FHIR R4 endpoint: http://localhost:${PORT}/fhir/metadata`);
 });

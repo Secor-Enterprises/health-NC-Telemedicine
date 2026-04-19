@@ -9,6 +9,8 @@
  */
 
 import type {
+  ApiClient,
+  ApiClientEvent,
   Appointment,
   AppointmentStatus,
   AuthSession,
@@ -18,6 +20,8 @@ import type {
   FacilityType,
   MedicalFile,
   MedicalRecord,
+  PatientMedicationRequest,
+  PatientObservation,
   User,
   UserRole,
 } from "./types";
@@ -325,5 +329,47 @@ export const api = {
 
   async deleteFacility(id: string): Promise<void> {
     return request(`/facilities/${id}`, { method: "DELETE" });
+  },
+
+  // ---------- API CLIENTS (FHIR integrations, admin-only) ----------
+  async listApiClients(): Promise<ApiClient[]> {
+    return request("/api-clients");
+  },
+
+  async createApiClient(input: {
+    name: string;
+    scopes: string;
+  }): Promise<ApiClient> {
+    return request("/api-clients", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  async updateApiClient(
+    id: string,
+    patch: Partial<{ name: string; scopes: string; active: boolean }>,
+  ): Promise<ApiClient> {
+    return request(`/api-clients/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
+  },
+
+  async deleteApiClient(id: string): Promise<void> {
+    return request(`/api-clients/${id}`, { method: "DELETE" });
+  },
+
+  async listApiClientEvents(id: string): Promise<ApiClientEvent[]> {
+    return request(`/api-clients/${id}/events`);
+  },
+
+  // ---------- FHIR-derived patient data (labs, prescriptions) ----------
+  async listObservations(patientId: string): Promise<PatientObservation[]> {
+    return request(`/fhir-data/observations${qs({ patientId })}`);
+  },
+
+  async listMedicationRequests(patientId: string): Promise<PatientMedicationRequest[]> {
+    return request(`/fhir-data/medication-requests${qs({ patientId })}`);
   },
 };
