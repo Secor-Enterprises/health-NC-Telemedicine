@@ -20,7 +20,8 @@ import {
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "@/hooks/use-toast";
-import { FileText, Upload, Plus } from "lucide-react";
+import { FileText, Upload, Plus, FlaskConical, Pill } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const Records = () => {
   const { user } = useAuth();
@@ -46,6 +47,18 @@ const Records = () => {
   const filesQuery = useQuery({
     queryKey: user ? queryKeys.files(user.id) : ["files", "anon"],
     queryFn: () => api.listFiles(user!.id),
+    enabled: !!user,
+  });
+
+  const observationsQuery = useQuery({
+    queryKey: user ? queryKeys.observations(user.id) : ["observations", "anon"],
+    queryFn: () => api.listObservations(user!.id),
+    enabled: !!user,
+  });
+
+  const medicationsQuery = useQuery({
+    queryKey: user ? queryKeys.medicationRequests(user.id) : ["medicationRequests", "anon"],
+    queryFn: () => api.listMedicationRequests(user!.id),
     enabled: !!user,
   });
 
@@ -103,6 +116,8 @@ const Records = () => {
 
   const records = recordsQuery.data ?? [];
   const files = filesQuery.data ?? [];
+  const observations = observationsQuery.data ?? [];
+  const medications = medicationsQuery.data ?? [];
   const loading = recordsQuery.isLoading || filesQuery.isLoading;
 
   return (
