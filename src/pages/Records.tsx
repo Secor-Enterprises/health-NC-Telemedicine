@@ -251,6 +251,89 @@ const Records = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Lab results & vitals (FHIR observations) */}
+        <Card className="shadow-soft">
+          <CardHeader>
+            <CardTitle className="font-display text-xl flex items-center gap-2">
+              <FlaskConical className="h-5 w-5 text-primary" />
+              Lab results & vitals
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {observationsQuery.isLoading ? (
+              <p className="text-sm text-muted-foreground">Loading…</p>
+            ) : observations.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No lab results yet. Connected hospital systems will populate this automatically.
+              </p>
+            ) : (
+              <ul className="divide-y">
+                {observations.map((o) => (
+                  <li key={o.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                    <div className="min-w-0">
+                      <div className="font-medium">{o.display}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(o.effectiveAt).toLocaleString()}
+                        {o.performerName ? ` · ${o.performerName}` : ""}
+                        {o.sourceSystem ? ` · via ${o.sourceSystem}` : ""}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {o.category && <Badge variant="outline">{o.category}</Badge>}
+                      <div className="font-display text-lg">
+                        {o.valueNumber ?? o.valueString ?? "—"}{" "}
+                        <span className="text-sm text-muted-foreground">{o.unit}</span>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Medications (FHIR MedicationRequest) */}
+        <Card className="shadow-soft">
+          <CardHeader>
+            <CardTitle className="font-display text-xl flex items-center gap-2">
+              <Pill className="h-5 w-5 text-primary" />
+              Prescriptions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {medicationsQuery.isLoading ? (
+              <p className="text-sm text-muted-foreground">Loading…</p>
+            ) : medications.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No active prescriptions.</p>
+            ) : (
+              <ul className="divide-y">
+                {medications.map((m) => (
+                  <li key={m.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                    <div className="min-w-0">
+                      <div className="font-medium">{m.medicationName}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {m.dosage ?? "Dosage not specified"}
+                        {m.frequency ? ` · ${m.frequency}` : ""}
+                        {m.prescriberName ? ` · Rx by ${m.prescriberName}` : ""}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Authored {new Date(m.authoredOn).toLocaleDateString()}
+                        {m.sourceSystem ? ` · via ${m.sourceSystem}` : ""}
+                      </div>
+                    </div>
+                    <Badge
+                      variant={m.status === "active" ? "default" : "outline"}
+                      className="capitalize"
+                    >
+                      {m.status.replace("_", " ")}
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
