@@ -4,6 +4,7 @@ import { prisma } from "../prisma";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { generateApiKey } from "../middleware/apiKey";
 import { HttpError } from "../middleware/error";
+import type { ObservationStatus, MedicationRequestStatus } from "@prisma/client";
 
 export const apiClientsRouter = Router();
 
