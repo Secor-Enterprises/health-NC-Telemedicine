@@ -167,7 +167,16 @@ const PatientDetail = () => {
       });
       return;
     }
-    medMutation.mutate({ patientId: id, ...parsed.data });
+    const v = parsed.data;
+    medMutation.mutate({
+      patientId: id,
+      medicationName: v.medicationName,
+      medicationCode: v.medicationCode,
+      dosage: v.dosage,
+      frequency: v.frequency,
+      status: v.status,
+      note: v.note,
+    });
   };
 
   const records = recordsQuery.data ?? [];
