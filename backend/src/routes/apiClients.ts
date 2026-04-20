@@ -186,3 +186,123 @@ fhirDataRouter.get("/medication-requests", async (req, res, next) => {
     next(e);
   }
 });
+
+// ---------- Doctor/admin write endpoints ----------
+
+const observationCreateSchema = z.object({
+  patientId: z.string().min(1),
+  code: z.string().min(1).max(64),
+  display: z.string().min(1).max(200),
+  valueNumber: z.number().finite().optional(),
+  valueString: z.string().max(500).optional(),
+  unit: z.string().max(32).optional(),
+  category: z.enum(["laboratory", "vital-signs", "imaging", "social-history", "exam"]).optional(),
+  status: z
+    .enum(["registered", "preliminary", "final", "amended", "cancelled"])
+    .optional(),
+  effectiveAt: z.string().datetime().optional(),
+  note: z.string().max(2000).optional(),
+});
+
+fhirDataRouter.post(
+  "/observations",
+  requireRole("doctor", "admin"),
+  async (req, res, next) => {
+    try {
+      const body = observationCreateSchema.parse(req.body);
+      // ensure patient exists and is a patient
+      const patient = await prisma.user.findUnique({ where: { id: body.patientId } });
+      if (!patient || patient.role !== "patient") throw new HttpError(404, "Patient not found");
+      if (body.valueNumber === undefined && !body.valueString) {
+        throw new HttpError(400, "Either valueNumber or valueString is required");
+      }
+
+      const created = await prisma.observation.create({
+        data: {
+          patientId: body.patientId,
+          performerId: req.auth!.sub,
+          status: (body.status ?? "final") as ObservationStatus,
+          code: body.code,
+          display: body.display,
+          valueNumber: body.valueNumber ?? null,
+          valueString: body.valueString ?? null,
+          unit: body.unit ?? null,
+          category: body.category ?? "laboratory",
+          effectiveAt: body.effectiveAt ? new Date(body.effectiveAt) : new Date(),
+          note: body.note ?? null,
+        },
+        include: { performer: true },
+      });
+
+      res.status(201).json({
+        id: created.id,
+        code: created.code,
+        display: created.display,
+        valueNumber: created.valueNumber,
+        valueString: created.valueString,
+        unit: created.unit,
+        category: created.category,
+        status: created.status,
+        effectiveAt: created.effectiveAt.toISOString(),
+        performerName: created.performer?.fullName ?? null,
+        sourceSystem: created.sourceSystem,
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
+);
+
+const medRequestCreateSchema = z.object({
+  patientId: z.string().min(1),
+  medicationName: z.string().min(1).max(200),
+  medicationCode: z.string().max(64).optional(),
+  dosage: z.string().max(200).optional(),
+  frequency: z.string().max(64).optional(),
+  status: z
+    .enum(["active", "on_hold", "cancelled", "completed", "stopped", "draft", "unknown"])
+    .optional(),
+  authoredOn: z.string().datetime().optional(),
+  note: z.string().max(2000).optional(),
+});
+
+fhirDataRouter.post(
+  "/medication-requests",
+  requireRole("doctor", "admin"),
+  async (req, res, next) => {
+    try {
+      const body = medRequestCreateSchema.parse(req.body);
+      const patient = await prisma.user.findUnique({ where: { id: body.patientId } });
+      if (!patient || patient.role !== "patient") throw new HttpError(404, "Patient not found");
+
+      const created = await prisma.medicationRequest.create({
+        data: {
+          patientId: body.patientId,
+          prescriberId: req.auth!.sub,
+          status: (body.status ?? "active") as MedicationRequestStatus,
+          medicationCode: body.medicationCode ?? null,
+          medicationName: body.medicationName,
+          dosage: body.dosage ?? null,
+          frequency: body.frequency ?? null,
+          authoredOn: body.authoredOn ? new Date(body.authoredOn) : new Date(),
+          note: body.note ?? null,
+        },
+        include: { prescriber: true },
+      });
+
+      res.status(201).json({
+        id: created.id,
+        medicationName: created.medicationName,
+        medicationCode: created.medicationCode,
+        dosage: created.dosage,
+        frequency: created.frequency,
+        status: created.status,
+        authoredOn: created.authoredOn.toISOString(),
+        prescriberName: created.prescriber?.fullName ?? null,
+        sourceSystem: created.sourceSystem,
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
+);
