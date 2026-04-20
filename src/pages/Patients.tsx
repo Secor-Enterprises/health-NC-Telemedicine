@@ -1,11 +1,12 @@
 import { useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
-import { Users } from "lucide-react";
+import { ChevronRight, Users } from "lucide-react";
 
 const Patients = () => {
   const { user } = useAuth();
@@ -52,13 +53,19 @@ const Patients = () => {
             ) : (
               <ul className="divide-y">
                 {patients.map((p) => (
-                  <li key={p.id} className="flex items-center justify-between py-3">
-                    <div>
-                      <div className="font-medium">{p.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {p.visits} visit{p.visits === 1 ? "" : "s"} · last {new Date(p.last).toLocaleDateString()}
+                  <li key={p.id}>
+                    <Link
+                      to={`/dashboard/patients/${p.id}`}
+                      className="flex items-center justify-between gap-3 py-3 transition-colors hover:bg-secondary/40 -mx-2 px-2 rounded-md"
+                    >
+                      <div>
+                        <div className="font-medium">{p.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {p.visits} visit{p.visits === 1 ? "" : "s"} · last {new Date(p.last).toLocaleDateString()}
+                        </div>
                       </div>
-                    </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </Link>
                   </li>
                 ))}
               </ul>
