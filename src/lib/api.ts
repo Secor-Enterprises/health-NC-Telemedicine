@@ -410,4 +410,42 @@ export const api = {
       body: JSON.stringify(input),
     });
   },
+
+  async updateObservation(
+    id: string,
+    patch: Partial<{
+      code: string;
+      display: string;
+      valueNumber: number | null;
+      valueString: string | null;
+      unit: string | null;
+      category: "laboratory" | "vital-signs" | "imaging" | "social-history" | "exam";
+      status: "registered" | "preliminary" | "final" | "amended" | "cancelled";
+      effectiveAt: string;
+      note: string | null;
+    }>,
+  ): Promise<PatientObservation> {
+    return request(`/fhir-data/observations/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
+  },
+
+  async updateMedicationRequest(
+    id: string,
+    patch: Partial<{
+      medicationName: string;
+      medicationCode: string | null;
+      dosage: string | null;
+      frequency: string | null;
+      status: "active" | "on_hold" | "cancelled" | "completed" | "stopped" | "draft" | "unknown";
+      authoredOn: string;
+      note: string | null;
+    }>,
+  ): Promise<PatientMedicationRequest> {
+    return request(`/fhir-data/medication-requests/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
+  },
 };
