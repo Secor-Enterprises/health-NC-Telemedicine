@@ -1,55 +1,58 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod";
 import { useAuth } from "@/context/AuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, FlaskConical, Pill, Plus } from "lucide-react";
+import { ArrowLeft, FlaskConical, Pencil, Pill, Plus, XCircle } from "lucide-react";
+import {
+  ObservationDialog,
+  type ObservationFormValues,
+} from "@/components/clinical/ObservationDialog";
+import {
+  MedicationRequestDialog,
+  type MedRequestFormValues,
+} from "@/components/clinical/MedicationRequestDialog";
+import type { PatientMedicationRequest, PatientObservation } from "@/lib/types";
 
-const observationSchema = z.object({
-  code: z.string().trim().min(1, "Code required").max(64),
-  display: z.string().trim().min(1, "Name required").max(200),
-  valueNumber: z
-    .union([z.string().length(0), z.coerce.number().finite()])
-    .optional(),
-  valueString: z.string().trim().max(500).optional(),
-  unit: z.string().trim().max(32).optional(),
-  category: z.enum(["laboratory", "vital-signs", "imaging", "social-history", "exam"]),
-  note: z.string().trim().max(2000).optional(),
-});
-
-const medRequestSchema = z.object({
-  medicationName: z.string().trim().min(1, "Medication required").max(200),
-  medicationCode: z.string().trim().max(64).optional(),
-  dosage: z.string().trim().max(200).optional(),
-  frequency: z.string().trim().max(64).optional(),
-  status: z.enum(["active", "on_hold", "completed", "cancelled", "draft"]),
-  note: z.string().trim().max(2000).optional(),
-});
+type CancelTarget =
+  | { kind: "observation"; item: PatientObservation }
+  | { kind: "medication"; item: PatientMedicationRequest }
+  | null;
 
 const PatientDetail = () => {
   const { id = "" } = useParams<{ id: string }>();
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [obsOpen, setObsOpen] = useState(false);
-  const [medOpen, setMedOpen] = useState(false);
-  const [obsCategory, setObsCategory] = useState("laboratory");
-  const [medStatus, setMedStatus] = useState("active");
+
+  const [obsDialog, setObsDialog] = useState<{
+    open: boolean;
+    mode: "create" | "edit";
+    item?: PatientObservation | null;
+  }>({ open: false, mode: "create" });
+
+  const [medDialog, setMedDialog] = useState<{
+    open: boolean;
+    mode: "create" | "edit";
+    item?: PatientMedicationRequest | null;
+  }>({ open: false, mode: "create" });
+
+  const [cancelTarget, setCancelTarget] = useState<CancelTarget>(null);
 
   const patientQuery = useQuery({
     queryKey: queryKeys.patient(id),
@@ -81,102 +84,125 @@ const PatientDetail = () => {
     document.title = patient ? `${patient.fullName} · Caretide` : "Patient · Caretide";
   }, [patient]);
 
-  const observationMutation = useMutation({
+  // ---------- Observation mutations ----------
+  const createObservation = useMutation({
     mutationFn: (input: Parameters<typeof api.createObservation>[0]) =>
       api.createObservation(input),
     onSuccess: () => {
       toast({ title: "Lab result added" });
-      setObsOpen(false);
+      setObsDialog({ open: false, mode: "create" });
       qc.invalidateQueries({ queryKey: queryKeys.observations(id) });
     },
     onError: (err: Error) =>
       toast({ title: "Failed to add result", description: err.message, variant: "destructive" }),
   });
 
-  const medMutation = useMutation({
+  const updateObservation = useMutation({
+    mutationFn: (vars: { id: string; patch: Parameters<typeof api.updateObservation>[1] }) =>
+      api.updateObservation(vars.id, vars.patch),
+    onSuccess: () => {
+      toast({ title: "Lab result updated" });
+      setObsDialog({ open: false, mode: "create" });
+      qc.invalidateQueries({ queryKey: queryKeys.observations(id) });
+    },
+    onError: (err: Error) =>
+      toast({ title: "Update failed", description: err.message, variant: "destructive" }),
+  });
+
+  // ---------- MedicationRequest mutations ----------
+  const createMedRequest = useMutation({
     mutationFn: (input: Parameters<typeof api.createMedicationRequest>[0]) =>
       api.createMedicationRequest(input),
     onSuccess: () => {
       toast({ title: "Prescription created" });
-      setMedOpen(false);
+      setMedDialog({ open: false, mode: "create" });
       qc.invalidateQueries({ queryKey: queryKeys.medicationRequests(id) });
     },
     onError: (err: Error) =>
       toast({ title: "Failed to prescribe", description: err.message, variant: "destructive" }),
   });
 
-  const handleAddObservation = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const parsed = observationSchema.safeParse({
-      code: fd.get("code"),
-      display: fd.get("display"),
-      valueNumber: fd.get("valueNumber") || undefined,
-      valueString: fd.get("valueString") || undefined,
-      unit: fd.get("unit") || undefined,
-      category: obsCategory,
-      note: fd.get("note") || undefined,
-    });
-    if (!parsed.success) {
-      toast({
-        title: "Invalid input",
-        description: parsed.error.issues[0]?.message ?? "Check the form",
-        variant: "destructive",
+  const updateMedRequest = useMutation({
+    mutationFn: (vars: {
+      id: string;
+      patch: Parameters<typeof api.updateMedicationRequest>[1];
+    }) => api.updateMedicationRequest(vars.id, vars.patch),
+    onSuccess: () => {
+      toast({ title: "Prescription updated" });
+      setMedDialog({ open: false, mode: "create" });
+      qc.invalidateQueries({ queryKey: queryKeys.medicationRequests(id) });
+    },
+    onError: (err: Error) =>
+      toast({ title: "Update failed", description: err.message, variant: "destructive" }),
+  });
+
+  // ---------- Submit handlers ----------
+  const submitObservation = (v: ObservationFormValues) => {
+    if (obsDialog.mode === "edit" && obsDialog.item) {
+      updateObservation.mutate({
+        id: obsDialog.item.id,
+        patch: {
+          code: v.code,
+          display: v.display,
+          valueNumber: v.valueNumber ?? null,
+          valueString: v.valueString ?? null,
+          unit: v.unit ?? null,
+          category: v.category,
+          status: v.status,
+        },
       });
-      return;
-    }
-    const v = parsed.data;
-    const valueNumber =
-      typeof v.valueNumber === "number" ? v.valueNumber : undefined;
-    if (valueNumber === undefined && !v.valueString) {
-      toast({
-        title: "Missing value",
-        description: "Provide a numeric or text value.",
-        variant: "destructive",
+    } else {
+      createObservation.mutate({
+        patientId: id,
+        code: v.code,
+        display: v.display,
+        valueNumber: v.valueNumber,
+        valueString: v.valueString,
+        unit: v.unit,
+        category: v.category,
+        note: v.note,
       });
-      return;
     }
-    observationMutation.mutate({
-      patientId: id,
-      code: v.code,
-      display: v.display,
-      valueNumber,
-      valueString: v.valueString,
-      unit: v.unit,
-      category: v.category,
-      note: v.note,
-    });
   };
 
-  const handleAddMedication = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const parsed = medRequestSchema.safeParse({
-      medicationName: fd.get("medicationName"),
-      medicationCode: fd.get("medicationCode") || undefined,
-      dosage: fd.get("dosage") || undefined,
-      frequency: fd.get("frequency") || undefined,
-      status: medStatus,
-      note: fd.get("note") || undefined,
-    });
-    if (!parsed.success) {
-      toast({
-        title: "Invalid input",
-        description: parsed.error.issues[0]?.message ?? "Check the form",
-        variant: "destructive",
+  const submitMedRequest = (v: MedRequestFormValues) => {
+    if (medDialog.mode === "edit" && medDialog.item) {
+      updateMedRequest.mutate({
+        id: medDialog.item.id,
+        patch: {
+          medicationName: v.medicationName,
+          medicationCode: v.medicationCode ?? null,
+          dosage: v.dosage ?? null,
+          frequency: v.frequency ?? null,
+          status: v.status,
+        },
       });
-      return;
+    } else {
+      createMedRequest.mutate({
+        patientId: id,
+        medicationName: v.medicationName,
+        medicationCode: v.medicationCode,
+        dosage: v.dosage,
+        frequency: v.frequency,
+        status: v.status,
+        note: v.note,
+      });
     }
-    const v = parsed.data;
-    medMutation.mutate({
-      patientId: id,
-      medicationName: v.medicationName,
-      medicationCode: v.medicationCode,
-      dosage: v.dosage,
-      frequency: v.frequency,
-      status: v.status,
-      note: v.note,
-    });
+  };
+
+  const confirmCancel = () => {
+    if (!cancelTarget) return;
+    if (cancelTarget.kind === "observation") {
+      updateObservation.mutate(
+        { id: cancelTarget.item.id, patch: { status: "cancelled" } },
+        { onSettled: () => setCancelTarget(null) },
+      );
+    } else {
+      updateMedRequest.mutate(
+        { id: cancelTarget.item.id, patch: { status: "cancelled" } },
+        { onSettled: () => setCancelTarget(null) },
+      );
+    }
   };
 
   const records = recordsQuery.data ?? [];
@@ -246,64 +272,12 @@ const PatientDetail = () => {
               <FlaskConical className="h-5 w-5 text-primary" />
               Lab results & vitals
             </CardTitle>
-            <Dialog open={obsOpen} onOpenChange={setObsOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="mr-1 h-4 w-4" /> Add result
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle className="font-display">Add lab result or vital</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleAddObservation} className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="code">LOINC code</Label>
-                      <Input id="code" name="code" placeholder="e.g. 718-7" required maxLength={64} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Category</Label>
-                      <Select value={obsCategory} onValueChange={setObsCategory}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="laboratory">Laboratory</SelectItem>
-                          <SelectItem value="vital-signs">Vital signs</SelectItem>
-                          <SelectItem value="imaging">Imaging</SelectItem>
-                          <SelectItem value="exam">Exam</SelectItem>
-                          <SelectItem value="social-history">Social history</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="display">Name / description</Label>
-                    <Input id="display" name="display" placeholder="e.g. Hemoglobin" required maxLength={200} />
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="valueNumber">Numeric value</Label>
-                      <Input id="valueNumber" name="valueNumber" type="number" step="any" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="unit">Unit</Label>
-                      <Input id="unit" name="unit" placeholder="g/dL" maxLength={32} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="valueString">Or text value</Label>
-                      <Input id="valueString" name="valueString" placeholder="Positive" maxLength={500} />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="note">Note</Label>
-                    <Textarea id="note" name="note" maxLength={2000} />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={observationMutation.isPending}>
-                    {observationMutation.isPending ? "Saving…" : "Save result"}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <Button
+              size="sm"
+              onClick={() => setObsDialog({ open: true, mode: "create", item: null })}
+            >
+              <Plus className="mr-1 h-4 w-4" /> Add result
+            </Button>
           </CardHeader>
           <CardContent>
             {observationsQuery.isLoading ? (
@@ -312,25 +286,49 @@ const PatientDetail = () => {
               <p className="text-sm text-muted-foreground">No lab results yet.</p>
             ) : (
               <ul className="divide-y">
-                {observations.map((o) => (
-                  <li key={o.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-                    <div className="min-w-0">
-                      <div className="font-medium">{o.display}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(o.effectiveAt).toLocaleString()}
-                        {o.performerName ? ` · ${o.performerName}` : ""}
-                        {o.sourceSystem ? ` · via ${o.sourceSystem}` : ""}
+                {observations.map((o) => {
+                  const isCancelled = o.status === "cancelled";
+                  return (
+                    <li key={o.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                      <div className="min-w-0">
+                        <div className={`font-medium ${isCancelled ? "line-through text-muted-foreground" : ""}`}>
+                          {o.display}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(o.effectiveAt).toLocaleString()}
+                          {o.performerName ? ` · ${o.performerName}` : ""}
+                          {o.sourceSystem ? ` · via ${o.sourceSystem}` : ""}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {o.category && <Badge variant="outline">{o.category}</Badge>}
-                      <div className="font-display text-lg">
-                        {o.valueNumber ?? o.valueString ?? "—"}{" "}
-                        <span className="text-sm text-muted-foreground">{o.unit}</span>
+                      <div className="flex items-center gap-2">
+                        {o.category && <Badge variant="outline">{o.category}</Badge>}
+                        {isCancelled && <Badge variant="destructive">cancelled</Badge>}
+                        <div className="font-display text-lg">
+                          {o.valueNumber ?? o.valueString ?? "—"}{" "}
+                          <span className="text-sm text-muted-foreground">{o.unit}</span>
+                        </div>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          aria-label="Edit lab result"
+                          onClick={() => setObsDialog({ open: true, mode: "edit", item: o })}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        {!isCancelled && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            aria-label="Cancel lab result"
+                            onClick={() => setCancelTarget({ kind: "observation", item: o })}
+                          >
+                            <XCircle className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
                       </div>
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </CardContent>
@@ -343,60 +341,12 @@ const PatientDetail = () => {
               <Pill className="h-5 w-5 text-primary" />
               Prescriptions
             </CardTitle>
-            <Dialog open={medOpen} onOpenChange={setMedOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="mr-1 h-4 w-4" /> New prescription
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle className="font-display">New prescription</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleAddMedication} className="space-y-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="medicationName">Medication</Label>
-                    <Input id="medicationName" name="medicationName" placeholder="e.g. Amoxicillin 500mg" required maxLength={200} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="medicationCode">RxNorm code (optional)</Label>
-                      <Input id="medicationCode" name="medicationCode" maxLength={64} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Status</Label>
-                      <Select value={medStatus} onValueChange={setMedStatus}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="on_hold">On hold</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="dosage">Dosage</Label>
-                      <Input id="dosage" name="dosage" placeholder="1 tablet by mouth" maxLength={200} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="frequency">Frequency</Label>
-                      <Input id="frequency" name="frequency" placeholder="BID, QD, PRN…" maxLength={64} />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="note">Note</Label>
-                    <Textarea id="note" name="note" maxLength={2000} />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={medMutation.isPending}>
-                    {medMutation.isPending ? "Saving…" : "Create prescription"}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <Button
+              size="sm"
+              onClick={() => setMedDialog({ open: true, mode: "create", item: null })}
+            >
+              <Plus className="mr-1 h-4 w-4" /> New prescription
+            </Button>
           </CardHeader>
           <CardContent>
             {medsQuery.isLoading ? (
@@ -405,28 +355,59 @@ const PatientDetail = () => {
               <p className="text-sm text-muted-foreground">No prescriptions yet.</p>
             ) : (
               <ul className="divide-y">
-                {meds.map((m) => (
-                  <li key={m.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-                    <div className="min-w-0">
-                      <div className="font-medium">{m.medicationName}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {m.dosage ?? "Dosage not specified"}
-                        {m.frequency ? ` · ${m.frequency}` : ""}
-                        {m.prescriberName ? ` · Rx by ${m.prescriberName}` : ""}
+                {meds.map((m) => {
+                  const isCancelled = m.status === "cancelled";
+                  return (
+                    <li key={m.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                      <div className="min-w-0">
+                        <div className={`font-medium ${isCancelled ? "line-through text-muted-foreground" : ""}`}>
+                          {m.medicationName}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {m.dosage ?? "Dosage not specified"}
+                          {m.frequency ? ` · ${m.frequency}` : ""}
+                          {m.prescriberName ? ` · Rx by ${m.prescriberName}` : ""}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Authored {new Date(m.authoredOn).toLocaleDateString()}
+                          {m.sourceSystem ? ` · via ${m.sourceSystem}` : ""}
+                        </div>
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        Authored {new Date(m.authoredOn).toLocaleDateString()}
-                        {m.sourceSystem ? ` · via ${m.sourceSystem}` : ""}
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={
+                            m.status === "active"
+                              ? "default"
+                              : m.status === "cancelled"
+                                ? "destructive"
+                                : "outline"
+                          }
+                          className="capitalize"
+                        >
+                          {m.status.replace("_", " ")}
+                        </Badge>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          aria-label="Edit prescription"
+                          onClick={() => setMedDialog({ open: true, mode: "edit", item: m })}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        {!isCancelled && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            aria-label="Cancel prescription"
+                            onClick={() => setCancelTarget({ kind: "medication", item: m })}
+                          >
+                            <XCircle className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
                       </div>
-                    </div>
-                    <Badge
-                      variant={m.status === "active" ? "default" : "outline"}
-                      className="capitalize"
-                    >
-                      {m.status.replace("_", " ")}
-                    </Badge>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </CardContent>
@@ -460,6 +441,50 @@ const PatientDetail = () => {
           </CardContent>
         </Card>
       </div>
+
+      <ObservationDialog
+        open={obsDialog.open}
+        onOpenChange={(open) => setObsDialog((s) => ({ ...s, open }))}
+        mode={obsDialog.mode}
+        initial={obsDialog.item}
+        pending={createObservation.isPending || updateObservation.isPending}
+        onSubmit={submitObservation}
+      />
+
+      <MedicationRequestDialog
+        open={medDialog.open}
+        onOpenChange={(open) => setMedDialog((s) => ({ ...s, open }))}
+        mode={medDialog.mode}
+        initial={medDialog.item}
+        pending={createMedRequest.isPending || updateMedRequest.isPending}
+        onSubmit={submitMedRequest}
+      />
+
+      <AlertDialog open={!!cancelTarget} onOpenChange={(open) => !open && setCancelTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Cancel this {cancelTarget?.kind === "observation" ? "lab result" : "prescription"}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {cancelTarget?.kind === "observation"
+                ? `"${cancelTarget.item.display}" will be marked as cancelled. It stays in the record for audit purposes.`
+                : cancelTarget?.kind === "medication"
+                  ? `"${cancelTarget.item.medicationName}" will be marked as cancelled. It stays in the record for audit purposes.`
+                  : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmCancel}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Cancel it
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };
