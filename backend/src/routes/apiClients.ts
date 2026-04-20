@@ -253,6 +253,62 @@ fhirDataRouter.post(
   },
 );
 
+const observationPatchSchema = z.object({
+  code: z.string().min(1).max(64).optional(),
+  display: z.string().min(1).max(200).optional(),
+  valueNumber: z.number().finite().nullable().optional(),
+  valueString: z.string().max(500).nullable().optional(),
+  unit: z.string().max(32).nullable().optional(),
+  category: z.enum(["laboratory", "vital-signs", "imaging", "social-history", "exam"]).optional(),
+  status: z.enum(["registered", "preliminary", "final", "amended", "cancelled"]).optional(),
+  effectiveAt: z.string().datetime().optional(),
+  note: z.string().max(2000).nullable().optional(),
+});
+
+fhirDataRouter.patch(
+  "/observations/:id",
+  requireRole("doctor", "admin"),
+  async (req, res, next) => {
+    try {
+      const body = observationPatchSchema.parse(req.body);
+      const existing = await prisma.observation.findUnique({ where: { id: req.params.id } });
+      if (!existing) throw new HttpError(404, "Observation not found");
+
+      const updated = await prisma.observation.update({
+        where: { id: req.params.id },
+        data: {
+          ...(body.code !== undefined && { code: body.code }),
+          ...(body.display !== undefined && { display: body.display }),
+          ...(body.valueNumber !== undefined && { valueNumber: body.valueNumber }),
+          ...(body.valueString !== undefined && { valueString: body.valueString }),
+          ...(body.unit !== undefined && { unit: body.unit }),
+          ...(body.category !== undefined && { category: body.category }),
+          ...(body.status !== undefined && { status: body.status as ObservationStatus }),
+          ...(body.effectiveAt !== undefined && { effectiveAt: new Date(body.effectiveAt) }),
+          ...(body.note !== undefined && { note: body.note }),
+        },
+        include: { performer: true },
+      });
+
+      res.json({
+        id: updated.id,
+        code: updated.code,
+        display: updated.display,
+        valueNumber: updated.valueNumber,
+        valueString: updated.valueString,
+        unit: updated.unit,
+        category: updated.category,
+        status: updated.status,
+        effectiveAt: updated.effectiveAt.toISOString(),
+        performerName: updated.performer?.fullName ?? null,
+        sourceSystem: updated.sourceSystem,
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
+);
+
 const medRequestCreateSchema = z.object({
   patientId: z.string().min(1),
   medicationName: z.string().min(1).max(200),
@@ -306,3 +362,56 @@ fhirDataRouter.post(
     }
   },
 );
+
+const medRequestPatchSchema = z.object({
+  medicationName: z.string().min(1).max(200).optional(),
+  medicationCode: z.string().max(64).nullable().optional(),
+  dosage: z.string().max(200).nullable().optional(),
+  frequency: z.string().max(64).nullable().optional(),
+  status: z
+    .enum(["active", "on_hold", "cancelled", "completed", "stopped", "draft", "unknown"])
+    .optional(),
+  authoredOn: z.string().datetime().optional(),
+  note: z.string().max(2000).nullable().optional(),
+});
+
+fhirDataRouter.patch(
+  "/medication-requests/:id",
+  requireRole("doctor", "admin"),
+  async (req, res, next) => {
+    try {
+      const body = medRequestPatchSchema.parse(req.body);
+      const existing = await prisma.medicationRequest.findUnique({ where: { id: req.params.id } });
+      if (!existing) throw new HttpError(404, "MedicationRequest not found");
+
+      const updated = await prisma.medicationRequest.update({
+        where: { id: req.params.id },
+        data: {
+          ...(body.medicationName !== undefined && { medicationName: body.medicationName }),
+          ...(body.medicationCode !== undefined && { medicationCode: body.medicationCode }),
+          ...(body.dosage !== undefined && { dosage: body.dosage }),
+          ...(body.frequency !== undefined && { frequency: body.frequency }),
+          ...(body.status !== undefined && { status: body.status as MedicationRequestStatus }),
+          ...(body.authoredOn !== undefined && { authoredOn: new Date(body.authoredOn) }),
+          ...(body.note !== undefined && { note: body.note }),
+        },
+        include: { prescriber: true },
+      });
+
+      res.json({
+        id: updated.id,
+        medicationName: updated.medicationName,
+        medicationCode: updated.medicationCode,
+        dosage: updated.dosage,
+        frequency: updated.frequency,
+        status: updated.status,
+        authoredOn: updated.authoredOn.toISOString(),
+        prescriberName: updated.prescriber?.fullName ?? null,
+        sourceSystem: updated.sourceSystem,
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
+);
+
