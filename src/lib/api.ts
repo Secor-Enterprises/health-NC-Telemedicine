@@ -179,6 +179,10 @@ export const api = {
     return request("/patients");
   },
 
+  async getPatient(id: string): Promise<User> {
+    return request(`/patients/${id}`);
+  },
+
   // ---------- APPOINTMENTS ----------
   async listAppointments(_params: {
     userId: string;
@@ -371,5 +375,39 @@ export const api = {
 
   async listMedicationRequests(patientId: string): Promise<PatientMedicationRequest[]> {
     return request(`/fhir-data/medication-requests${qs({ patientId })}`);
+  },
+
+  async createObservation(input: {
+    patientId: string;
+    code: string;
+    display: string;
+    valueNumber?: number;
+    valueString?: string;
+    unit?: string;
+    category?: "laboratory" | "vital-signs" | "imaging" | "social-history" | "exam";
+    status?: "registered" | "preliminary" | "final" | "amended" | "cancelled";
+    effectiveAt?: string;
+    note?: string;
+  }): Promise<PatientObservation> {
+    return request("/fhir-data/observations", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  async createMedicationRequest(input: {
+    patientId: string;
+    medicationName: string;
+    medicationCode?: string;
+    dosage?: string;
+    frequency?: string;
+    status?: "active" | "on_hold" | "cancelled" | "completed" | "stopped" | "draft" | "unknown";
+    authoredOn?: string;
+    note?: string;
+  }): Promise<PatientMedicationRequest> {
+    return request("/fhir-data/medication-requests", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
   },
 };
