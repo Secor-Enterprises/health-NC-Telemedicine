@@ -266,10 +266,24 @@ const PatientDetail = () => {
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 font-display text-lg font-semibold text-primary">
               {initials}
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <h1 className="font-display text-3xl font-semibold">{patient.fullName}</h1>
               <p className="text-sm text-muted-foreground">{patient.email}</p>
+              {patient.profile && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {patient.profile.dateOfBirth
+                    ? `DOB ${new Date(patient.profile.dateOfBirth).toLocaleDateString()}`
+                    : "DOB not set"}
+                  {patient.profile.phone ? ` · ${patient.profile.phone}` : ""}
+                  {patient.profile.bloodType ? ` · ${patient.profile.bloodType}` : ""}
+                </p>
+              )}
             </div>
+            {(user?.role === "admin" || user?.role === "clerk" || user?.role === "doctor") && (
+              <Button variant="outline" size="sm" onClick={() => setEditPatientOpen(true)}>
+                <UserCog className="mr-1 h-4 w-4" /> Edit patient
+              </Button>
+            )}
           </div>
         </div>
 
@@ -448,7 +462,67 @@ const PatientDetail = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Audit log */}
+        <Card className="shadow-soft">
+          <CardHeader>
+            <CardTitle className="font-display text-xl flex items-center gap-2">
+              <History className="h-5 w-5 text-primary" /> Audit log
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {auditQuery.isLoading ? (
+              <p className="text-sm text-muted-foreground">Loading…</p>
+            ) : (auditQuery.data ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">No changes recorded yet.</p>
+            ) : (
+              <ol className="relative space-y-5 border-l border-border pl-6">
+                {(auditQuery.data ?? []).map((entry) => (
+                  <li key={entry.id} className="relative">
+                    <span
+                      className={`absolute -left-[29px] top-1.5 h-3 w-3 rounded-full border-2 border-background ${
+                        entry.action === "created" ? "bg-success" : "bg-primary"
+                      }`}
+                    />
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <span>{new Date(entry.createdAt).toLocaleString()}</span>
+                      <Badge variant="outline" className="capitalize">{entry.action}</Badge>
+                      <span>
+                        by <span className="font-medium text-foreground">{entry.actorName}</span>{" "}
+                        <span className="capitalize">({entry.actorRole})</span>
+                      </span>
+                    </div>
+                    {entry.changes.length > 0 && (
+                      <ul className="mt-2 space-y-1 text-sm">
+                        {entry.changes.map((c) => (
+                          <li key={c.field} className="leading-snug">
+                            <span className="font-medium">{c.label}:</span>{" "}
+                            {entry.action === "created" ? (
+                              <span className="text-muted-foreground">{c.after || "—"}</span>
+                            ) : (
+                              <>
+                                <span className="line-through text-muted-foreground">{c.before || "—"}</span>
+                                <span className="mx-1 text-muted-foreground">→</span>
+                                <span>{c.after || "—"}</span>
+                              </>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </CardContent>
+        </Card>
       </div>
+
+      <EditPatientDialog
+        open={editPatientOpen}
+        onOpenChange={setEditPatientOpen}
+        patient={patient}
+      />
 
       <ObservationDialog
         open={obsDialog.open}
