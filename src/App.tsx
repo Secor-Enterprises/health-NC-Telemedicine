@@ -13,6 +13,8 @@ import Records from "./pages/Records.tsx";
 import Doctors from "./pages/Doctors.tsx";
 import Patients from "./pages/Patients.tsx";
 import PatientDetail from "./pages/PatientDetail.tsx";
+import RegisterPatient from "./pages/RegisterPatient.tsx";
+import Clerks from "./pages/Clerks.tsx";
 import Availability from "./pages/Availability.tsx";
 import Facilities from "./pages/Facilities.tsx";
 import Integrations from "./pages/Integrations.tsx";
