@@ -11,6 +11,8 @@ import {
   Users,
   HeartPulse,
   Plug,
+  UserPlus,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
