@@ -11,7 +11,7 @@ appointmentsRouter.get("/", requireAuth, async (req, res, next) => {
   try {
     const { sub, role } = req.auth!;
     const where =
-      role === "admin"
+      role === "admin" || role === "clerk"
         ? {}
         : role === "doctor"
           ? { doctorId: sub }
