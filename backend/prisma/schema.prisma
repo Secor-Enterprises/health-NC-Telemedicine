@@ -85,6 +85,9 @@ model User {
   performedObservations  Observation[]        @relation("PerformerObservations")
   patientMedReqs         MedicationRequest[]  @relation("PatientMedicationRequests")
   prescriberMedReqs      MedicationRequest[]  @relation("PrescriberMedicationRequests")
+
+  patientAuditLogs       PatientAuditLog[]    @relation("PatientAuditLogs")
+  actorAuditLogs         PatientAuditLog[]    @relation("ActorAuditLogs")
 }
 
 model PatientProfile {
