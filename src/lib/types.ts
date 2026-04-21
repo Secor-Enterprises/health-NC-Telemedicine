@@ -2,7 +2,7 @@
 // Domain types — shared across the app and your backend contract
 // ============================================================
 
-export type UserRole = "patient" | "doctor" | "admin";
+export type UserRole = "patient" | "doctor" | "admin" | "clerk";
 
 export interface User {
   id: string;
