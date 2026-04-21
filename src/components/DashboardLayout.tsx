@@ -37,7 +37,15 @@ const navByRole = {
     { to: "/dashboard/doctors", label: "Doctors", icon: Stethoscope },
     { to: "/dashboard/patients", label: "Patients", icon: Users },
     { to: "/dashboard/facilities", label: "Facilities", icon: Hospital },
+    { to: "/dashboard/clerks", label: "Clerks", icon: ShieldCheck },
     { to: "/dashboard/integrations", label: "Integrations", icon: Plug },
+  ],
+  clerk: [
+    { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
+    { to: "/dashboard/patients", label: "Patients", icon: Users },
+    { to: "/dashboard/patients/new", label: "Register patient", icon: UserPlus },
+    { to: "/dashboard/appointments", label: "Appointments", icon: Calendar },
+    { to: "/dashboard/facilities", label: "Facilities", icon: Hospital },
   ],
 } as const;
 
