@@ -55,10 +55,12 @@ const App = () => (
             <Route path="/dashboard/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
             <Route path="/dashboard/records" element={<ProtectedRoute roles={["patient"]}><Records /></ProtectedRoute>} />
             <Route path="/dashboard/doctors" element={<ProtectedRoute roles={["patient", "admin"]}><Doctors /></ProtectedRoute>} />
-            <Route path="/dashboard/patients" element={<ProtectedRoute roles={["doctor", "admin"]}><Patients /></ProtectedRoute>} />
-            <Route path="/dashboard/patients/:id" element={<ProtectedRoute roles={["doctor", "admin"]}><PatientDetail /></ProtectedRoute>} />
+            <Route path="/dashboard/patients" element={<ProtectedRoute roles={["doctor", "admin", "clerk"]}><Patients /></ProtectedRoute>} />
+            <Route path="/dashboard/patients/new" element={<ProtectedRoute roles={["admin", "clerk"]}><RegisterPatient /></ProtectedRoute>} />
+            <Route path="/dashboard/patients/:id" element={<ProtectedRoute roles={["doctor", "admin", "clerk"]}><PatientDetail /></ProtectedRoute>} />
             <Route path="/dashboard/availability" element={<ProtectedRoute roles={["doctor"]}><Availability /></ProtectedRoute>} />
             <Route path="/dashboard/facilities" element={<ProtectedRoute><Facilities /></ProtectedRoute>} />
+            <Route path="/dashboard/clerks" element={<ProtectedRoute roles={["admin"]}><Clerks /></ProtectedRoute>} />
             <Route path="/dashboard/integrations" element={<ProtectedRoute roles={["admin"]}><Integrations /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
