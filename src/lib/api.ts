@@ -222,6 +222,10 @@ export const api = {
     });
   },
 
+  async listPatientAudit(id: string): Promise<import("./types").PatientAuditEntry[]> {
+    return request(`/patients/${id}/audit`);
+  },
+
   // ---------- CLERKS (admin-only) ----------
   async listClerks(): Promise<User[]> {
     return request("/users/clerks");
