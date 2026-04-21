@@ -183,6 +183,65 @@ export const api = {
     return request(`/patients/${id}`);
   },
 
+  async createPatient(input: {
+    email: string;
+    fullName: string;
+    password?: string;
+    profile?: {
+      dateOfBirth?: string | null;
+      phone?: string | null;
+      address?: string | null;
+      bloodType?: string | null;
+      allergies?: string | null;
+      emergencyContact?: string | null;
+    };
+  }): Promise<User & { canLogin?: boolean }> {
+    return request("/patients", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  async updatePatient(
+    id: string,
+    patch: {
+      fullName?: string;
+      profile?: {
+        dateOfBirth?: string | null;
+        phone?: string | null;
+        address?: string | null;
+        bloodType?: string | null;
+        allergies?: string | null;
+        emergencyContact?: string | null;
+      };
+    },
+  ): Promise<User> {
+    return request(`/patients/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
+  },
+
+  // ---------- CLERKS (admin-only) ----------
+  async listClerks(): Promise<User[]> {
+    return request("/users/clerks");
+  },
+
+  async createClerk(input: {
+    email: string;
+    fullName: string;
+    password: string;
+  }): Promise<User> {
+    return request("/users/clerks", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  async deleteClerk(id: string): Promise<void> {
+    return request(`/users/clerks/${id}`, { method: "DELETE" });
+  },
+
   // ---------- APPOINTMENTS ----------
   async listAppointments(_params: {
     userId: string;
