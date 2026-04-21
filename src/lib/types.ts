@@ -153,6 +153,24 @@ export interface PatientObservation {
   sourceSystem?: string | null;
 }
 
+export interface PatientAuditChange {
+  field: string;
+  label: string;
+  before: string | null;
+  after: string | null;
+}
+
+export interface PatientAuditEntry {
+  id: string;
+  patientId: string;
+  actorId: string;
+  actorName: string;
+  actorRole: UserRole;
+  action: "created" | "updated";
+  changes: PatientAuditChange[];
+  createdAt: string;
+}
+
 export interface PatientMedicationRequest {
   id: string;
   medicationName: string;
