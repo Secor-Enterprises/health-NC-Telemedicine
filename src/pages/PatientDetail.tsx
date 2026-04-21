@@ -19,7 +19,7 @@ import {
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "@/hooks/use-toast";
-import { ArrowLeft, FlaskConical, Pencil, Pill, Plus, XCircle } from "lucide-react";
+import { ArrowLeft, FlaskConical, History, Pencil, Pill, Plus, UserCog, XCircle } from "lucide-react";
 import {
   ObservationDialog,
   type ObservationFormValues,
@@ -28,6 +28,7 @@ import {
   MedicationRequestDialog,
   type MedRequestFormValues,
 } from "@/components/clinical/MedicationRequestDialog";
+import { EditPatientDialog } from "@/components/patients/EditPatientDialog";
 import type { PatientMedicationRequest, PatientObservation } from "@/lib/types";
 
 type CancelTarget =
@@ -53,6 +54,7 @@ const PatientDetail = () => {
   }>({ open: false, mode: "create" });
 
   const [cancelTarget, setCancelTarget] = useState<CancelTarget>(null);
+  const [editPatientOpen, setEditPatientOpen] = useState(false);
 
   const patientQuery = useQuery({
     queryKey: queryKeys.patient(id),
@@ -75,6 +77,12 @@ const PatientDetail = () => {
   const medsQuery = useQuery({
     queryKey: queryKeys.medicationRequests(id),
     queryFn: () => api.listMedicationRequests(id),
+    enabled: !!id && !!user,
+  });
+
+  const auditQuery = useQuery({
+    queryKey: queryKeys.patientAudit(id),
+    queryFn: () => api.listPatientAudit(id),
     enabled: !!id && !!user,
   });
 
