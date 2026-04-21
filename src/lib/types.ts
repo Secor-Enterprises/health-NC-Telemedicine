@@ -2,7 +2,7 @@
 // Domain types — shared across the app and your backend contract
 // ============================================================
 
-export type UserRole = "patient" | "doctor" | "admin";
+export type UserRole = "patient" | "doctor" | "admin" | "clerk";
 
 export interface User {
   id: string;
@@ -10,16 +10,18 @@ export interface User {
   fullName: string;
   role: UserRole;
   createdAt: string; // ISO
+  /** Present on patient list/detail responses. */
+  profile?: PatientProfile | null;
 }
 
 export interface PatientProfile {
   userId: string;
-  dateOfBirth?: string;
-  phone?: string;
-  address?: string;
-  bloodType?: string;
-  allergies?: string;
-  emergencyContact?: string;
+  dateOfBirth?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  bloodType?: string | null;
+  allergies?: string | null;
+  emergencyContact?: string | null;
 }
 
 export interface DoctorProfile {

@@ -10,6 +10,7 @@ export const queryKeys = {
     ["doctors", { facilityId: facilityId ?? null }] as const,
   patients: ["patients"] as const,
   patient: (id: string) => ["patients", id] as const,
+  clerks: ["users", "clerks"] as const,
 
   appointments: (scope: { userId: string; role: string }) =>
     ["appointments", scope] as const,
