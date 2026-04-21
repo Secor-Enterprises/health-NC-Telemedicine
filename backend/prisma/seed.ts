@@ -49,6 +49,17 @@ async function main() {
     },
   });
 
+  await prisma.user.upsert({
+    where: { email: "clerk@demo.com" },
+    update: {},
+    create: {
+      email: "clerk@demo.com",
+      fullName: "Front-Desk Clerk",
+      role: UserRole.clerk,
+      passwordHash,
+    },
+  });
+
   const existingAppt = await prisma.appointment.findFirst({
     where: { patientId: patient.id, doctorId: doctor.id },
   });
@@ -188,7 +199,7 @@ async function main() {
     });
   }
 
-  console.log("✅ Seed complete: doctor@demo.com / patient@demo.com / admin@demo.com (demo1234)");
+  console.log("✅ Seed complete: doctor@demo.com / patient@demo.com / admin@demo.com / clerk@demo.com (demo1234)");
 }
 
 main().finally(() => prisma.$disconnect());
