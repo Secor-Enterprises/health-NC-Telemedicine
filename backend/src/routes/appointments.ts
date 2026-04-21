@@ -113,7 +113,7 @@ appointmentsRouter.patch("/:id", requireAuth, async (req, res, next) => {
 
     const { sub, role } = req.auth!;
     const isParticipant = existing.doctorId === sub || existing.patientId === sub;
-    if (role !== "admin" && !isParticipant) throw new HttpError(403, "Forbidden");
+    if (role !== "admin" && role !== "clerk" && !isParticipant) throw new HttpError(403, "Forbidden");
 
     const updated = await prisma.appointment.update({
       where: { id: req.params.id },
