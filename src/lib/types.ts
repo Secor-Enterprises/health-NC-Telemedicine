@@ -9,6 +9,8 @@ export interface User {
   email: string;
   fullName: string;
   role: UserRole;
+  /** True when the account was created with a temporary password and must be changed before normal use. */
+  mustChangePassword?: boolean;
   createdAt: string; // ISO
   /** Present on patient list/detail responses. */
   profile?: PatientProfile | null;

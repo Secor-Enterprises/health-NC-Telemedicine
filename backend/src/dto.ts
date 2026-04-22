@@ -13,6 +13,7 @@ export function toUserDTO(u: User) {
     email: u.email,
     fullName: u.fullName,
     role: u.role,
+    mustChangePassword: u.mustChangePassword,
     createdAt: u.createdAt.toISOString(),
   };
 }
