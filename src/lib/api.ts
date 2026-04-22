@@ -145,11 +145,27 @@ export const api = {
     const session = getStoredSession();
     if (!session) return null;
     try {
-      return await request<User>("/auth/me");
+      const user = await request<User>("/auth/me");
+      // Keep stored session in sync (e.g. so mustChangePassword flips off after change)
+      setStoredSession({ ...session, user });
+      return user;
     } catch {
       setStoredSession(null);
       return null;
     }
+  },
+
+  async changePassword(input: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<User> {
+    const user = await request<User>("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+    const session = getStoredSession();
+    if (session) setStoredSession({ ...session, user });
+    return user;
   },
 
   // ---------- DOCTORS ----------
