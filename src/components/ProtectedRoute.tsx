@@ -2,6 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/lib/types";
 import { Loader2 } from "lucide-react";
+import { ForcePasswordChangeGate } from "@/components/auth/ForcePasswordChangeGate";
 
 export function ProtectedRoute({
   children,
@@ -19,6 +20,8 @@ export function ProtectedRoute({
     );
   }
   if (!user) return <Navigate to="/auth" replace />;
+  // Block all dashboard access until the temporary password is changed.
+  if (user.mustChangePassword) return <ForcePasswordChangeGate />;
   if (roles && !roles.includes(user.role)) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }
