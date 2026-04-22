@@ -70,3 +70,30 @@ authRouter.get("/me", requireAuth, async (req, res, next) => {
     next(e);
   }
 });
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8).max(200),
+});
+
+authRouter.post("/change-password", requireAuth, async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+    if (currentPassword === newPassword) {
+      throw new HttpError(400, "New password must differ from the current one");
+    }
+    const user = await prisma.user.findUnique({ where: { id: req.auth!.sub } });
+    if (!user) throw new HttpError(401, "User not found");
+    if (!(await bcrypt.compare(currentPassword, user.passwordHash))) {
+      throw new HttpError(401, "Current password is incorrect");
+    }
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash, mustChangePassword: false },
+    });
+    res.json(toUserDTO(updated));
+  } catch (e) {
+    next(e);
+  }
+});

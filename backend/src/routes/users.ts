@@ -47,7 +47,13 @@ usersRouter.post(
       if (exists) throw new HttpError(409, "An account with this email already exists");
       const passwordHash = await bcrypt.hash(body.password, 10);
       const user = await prisma.user.create({
-        data: { email, fullName: body.fullName, role: "clerk", passwordHash },
+        data: {
+          email,
+          fullName: body.fullName,
+          role: "clerk",
+          passwordHash,
+          mustChangePassword: true,
+        },
       });
       res.status(201).json(toUserDTO(user));
     } catch (e) {

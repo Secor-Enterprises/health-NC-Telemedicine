@@ -65,12 +65,13 @@ model Facility {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  fullName     String
-  role         UserRole
-  createdAt    DateTime @default(now())
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  passwordHash       String
+  fullName           String
+  role               UserRole
+  mustChangePassword Boolean  @default(false)
+  createdAt          DateTime @default(now())
 
   doctorProfile     DoctorProfile?
   patientProfile    PatientProfile?

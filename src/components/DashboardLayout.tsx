@@ -15,6 +15,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PasswordChangeBanner } from "@/components/auth/PasswordChangeBanner";
 
 const navByRole = {
   patient: [
@@ -64,6 +65,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-gradient-soft">
+      <PasswordChangeBanner />
       <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur-md">
         <div className="container flex h-16 items-center justify-between gap-4">
           <Link to="/dashboard" className="flex items-center gap-2">
