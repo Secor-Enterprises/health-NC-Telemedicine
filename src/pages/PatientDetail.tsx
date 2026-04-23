@@ -20,6 +20,7 @@ import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, FlaskConical, History, Pencil, Pill, Plus, UserCog, XCircle } from "lucide-react";
+import { PrintButton } from "@/components/PrintButton";
 import {
   ObservationDialog,
   type ObservationFormValues,
@@ -255,9 +256,9 @@ const PatientDetail = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 print-area">
         <div>
-          <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
+          <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2 no-print">
             <Link to="/dashboard/patients">
               <ArrowLeft className="mr-1 h-4 w-4" /> Patients
             </Link>
@@ -279,11 +280,17 @@ const PatientDetail = () => {
                 </p>
               )}
             </div>
-            {(user?.role === "admin" || user?.role === "clerk" || user?.role === "doctor") && (
-              <Button variant="outline" size="sm" onClick={() => setEditPatientOpen(true)}>
-                <UserCog className="mr-1 h-4 w-4" /> Edit patient
-              </Button>
-            )}
+            <div className="flex items-center gap-2 no-print">
+              <PrintButton
+                documentTitle={`Patient summary — ${patient.fullName}`}
+                label="Print summary"
+              />
+              {(user?.role === "admin" || user?.role === "clerk" || user?.role === "doctor") && (
+                <Button variant="outline" size="sm" onClick={() => setEditPatientOpen(true)}>
+                  <UserCog className="mr-1 h-4 w-4" /> Edit patient
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
