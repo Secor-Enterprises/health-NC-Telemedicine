@@ -16,6 +16,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import type { Appointment, AppointmentStatus } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 import { Calendar } from "lucide-react";
+import { PrintButton } from "@/components/PrintButton";
 
 const statusColor: Record<AppointmentStatus, string> = {
   requested: "bg-warning/15 text-warning-foreground",
@@ -66,7 +67,7 @@ const Appointments = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 print-area">
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl font-semibold">Appointments</h1>
@@ -74,11 +75,14 @@ const Appointments = () => {
               {user.role === "patient" ? "Your visits, past and upcoming." : "Schedule and patient visits."}
             </p>
           </div>
-          {user.role === "patient" && (
-            <Button asChild>
-              <a href="/dashboard/doctors">Book a visit</a>
-            </Button>
-          )}
+          <div className="flex items-center gap-2 no-print">
+            <PrintButton documentTitle="Appointments — Caretide" label="Print list" />
+            {user.role === "patient" && (
+              <Button asChild>
+                <a href="/dashboard/doctors">Book a visit</a>
+              </Button>
+            )}
+          </div>
         </div>
 
         <Card className="shadow-soft">

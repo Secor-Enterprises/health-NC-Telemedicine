@@ -21,6 +21,7 @@ import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "@/hooks/use-toast";
 import { FileText, Upload, Plus, FlaskConical, Pill } from "lucide-react";
+import { PrintButton } from "@/components/PrintButton";
 import { Badge } from "@/components/ui/badge";
 
 const Records = () => {
@@ -122,13 +123,14 @@ const Records = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 print-area">
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl font-semibold">Medical records</h1>
             <p className="text-muted-foreground">Visit history and uploaded documents.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 no-print">
+            <PrintButton documentTitle="Medical records — Caretide" label="Print" />
             <Button variant="outline" asChild disabled={uploadMutation.isPending}>
               <Label htmlFor="file-upload" className="cursor-pointer">
                 <Upload className="mr-2 h-4 w-4" />
