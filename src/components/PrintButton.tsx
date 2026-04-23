@@ -1,5 +1,10 @@
 import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import type { UserRole } from "@/lib/types";
+
+/** Roles permitted to print clinical/operational documents. */
+const PRINT_ALLOWED_ROLES: ReadonlyArray<UserRole> = ["admin", "doctor", "clerk"];
 
 interface PrintButtonProps {
   /** Optional label override. Defaults to "Print". */
@@ -13,10 +18,15 @@ interface PrintButtonProps {
 }
 
 /**
- * Triggers the browser's native print dialog. Works with any installed
- * printer (USB, network, AirPrint, "Save as PDF") because it uses the
- * standard window.print() flow. Pages should add `print-area` to the
- * region they want printed and `no-print` to UI chrome they want hidden.
+ * Triggers the browser's native print dialog. Works on Windows, macOS, and
+ * Linux with any installed printer (USB, network, CUPS, AirPrint, or
+ * "Save as PDF") because it uses the standard window.print() flow.
+ *
+ * Access is restricted to administrators, doctors, and registration clerks.
+ * Patients (and unauthenticated visitors) will not see the button.
+ *
+ * Pages should add `print-area` to the region they want printed and
+ * `no-print` to UI chrome they want hidden.
  */
 export function PrintButton({
   label = "Print",
@@ -25,6 +35,12 @@ export function PrintButton({
   size = "sm",
   className,
 }: PrintButtonProps) {
+  const { user } = useAuth();
+
+  if (!user || !PRINT_ALLOWED_ROLES.includes(user.role)) {
+    return null;
+  }
+
   const handlePrint = () => {
     const previousTitle = document.title;
     if (documentTitle) {
