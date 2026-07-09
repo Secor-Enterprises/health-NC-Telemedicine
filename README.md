@@ -1,3 +1,3 @@
-# Welcome to your Lovable project
+# Welcome to Northern Cape Telemedicine project
 
 TODO: Document your project here
