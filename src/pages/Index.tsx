@@ -172,9 +172,9 @@ const Index = () => {
         <div className="container flex flex-col items-center justify-between gap-4 text-sm text-muted-foreground md:flex-row">
           <div className="flex items-center gap-2">
             <HeartPulse className="h-4 w-4 text-primary" />
-            <span>© {new Date().getFullYear()} Caretide</span>
+            <span>© {new Date().getFullYear()} Secor Enterprises(Pty)Ltd</span>
           </div>
-          <div>Self-hosted telemedicine portal</div>
+          <div>Northern Cape telemedicine portal</div>
         </div>
       </footer>
     </div>
