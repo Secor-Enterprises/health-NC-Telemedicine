@@ -1,0 +1,55 @@
+name: Bootstrap Project Management
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - bootstrap/project-governance
+    paths:
+      - ".github/project-management/**"
+      - ".github/workflows/bootstrap-project-management.yml"
+      - "scripts/bootstrap-github-management.sh"
+      - "scripts/bootstrap-github-project.sh"
+      - "docs/project-management/**"
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+  repository-projects: write
+
+concurrency:
+  group: project-management-bootstrap
+  cancel-in-progress: false
+
+env:
+  GH_REPO: ${{ github.repository }}
+
+jobs:
+  labels-and-milestones:
+    name: Apply labels and milestones
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Apply repository taxonomy and milestones
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/bootstrap-github-management.sh
+
+  organisation-project:
+    name: Provision enterprise GitHub Project
+    needs: labels-and-milestones
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Create or update Project and custom fields
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
+        run: bash scripts/bootstrap-github-project.sh
