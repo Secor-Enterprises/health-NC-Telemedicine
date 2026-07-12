@@ -1,0 +1,105 @@
+:root {
+  --hc-color-navy-900: #09263f;
+  --hc-color-navy-800: #12344f;
+  --hc-color-navy-700: #173b57;
+  --hc-color-ink-900: #112436;
+  --hc-color-slate-600: #6d7e8c;
+  --hc-color-slate-300: #a9c3d4;
+  --hc-color-line-200: #dbe5eb;
+  --hc-color-surface-050: #f4f8fa;
+  --hc-color-white: #ffffff;
+  --hc-color-cyan-500: #00a6d6;
+  --hc-color-teal-600: #008f86;
+  --hc-color-teal-050: #dff6f2;
+  --hc-color-green-600: #2d8a52;
+  --hc-color-green-400: #52d38f;
+  --hc-color-green-050: #e9f7ef;
+  --hc-color-amber-500: #e3a313;
+  --hc-color-amber-700: #9a6900;
+  --hc-color-amber-050: #fff5da;
+  --hc-color-red-600: #c94747;
+  --hc-color-red-050: #fdeaea;
+  --hc-color-blue-050: #eaf5fa;
+  --hc-color-blue-600: #19759b;
+
+  --hc-bg-page: var(--hc-color-surface-050);
+  --hc-bg-surface: var(--hc-color-white);
+  --hc-bg-navigation: var(--hc-color-navy-900);
+  --hc-bg-navigation-hover: var(--hc-color-navy-700);
+  --hc-bg-accent: var(--hc-color-teal-600);
+  --hc-text-primary: var(--hc-color-ink-900);
+  --hc-text-secondary: var(--hc-color-slate-600);
+  --hc-text-inverse: var(--hc-color-white);
+  --hc-text-navigation-muted: var(--hc-color-slate-300);
+  --hc-border-default: var(--hc-color-line-200);
+  --hc-focus-ring: var(--hc-color-cyan-500);
+  --hc-status-success: var(--hc-color-green-600);
+  --hc-status-success-bg: var(--hc-color-green-050);
+  --hc-status-warning: var(--hc-color-amber-700);
+  --hc-status-warning-bg: var(--hc-color-amber-050);
+  --hc-status-danger: var(--hc-color-red-600);
+  --hc-status-danger-bg: var(--hc-color-red-050);
+  --hc-status-info: var(--hc-color-blue-600);
+  --hc-status-info-bg: var(--hc-color-blue-050);
+
+  --hc-font-family: Inter, "Segoe UI", Arial, Helvetica, sans-serif;
+  --hc-font-size-label-sm: 0.6875rem;
+  --hc-font-size-body-sm: 0.75rem;
+  --hc-font-size-body-md: 0.875rem;
+  --hc-font-size-body-lg: 1rem;
+  --hc-font-size-title-sm: 1.25rem;
+  --hc-font-size-title-md: 1.75rem;
+  --hc-font-size-title-lg: 2.125rem;
+  --hc-line-height-tight: 1.2;
+  --hc-line-height-default: 1.5;
+  --hc-line-height-relaxed: 1.65;
+
+  --hc-space-1: 0.25rem;
+  --hc-space-2: 0.5rem;
+  --hc-space-3: 0.75rem;
+  --hc-space-4: 1rem;
+  --hc-space-5: 1.25rem;
+  --hc-space-6: 1.5rem;
+  --hc-space-7: 1.75rem;
+  --hc-space-8: 2rem;
+  --hc-space-10: 2.5rem;
+  --hc-space-12: 3rem;
+  --hc-space-16: 4rem;
+
+  --hc-radius-sm: 0.5rem;
+  --hc-radius-md: 0.625rem;
+  --hc-radius-lg: 0.75rem;
+  --hc-radius-xl: 0.875rem;
+  --hc-radius-2xl: 1.0625rem;
+  --hc-radius-round: 999px;
+
+  --hc-shadow-surface: 0 8px 28px rgba(23, 57, 78, 0.04);
+  --hc-shadow-floating: 0 12px 30px rgba(0, 26, 43, 0.27);
+  --hc-shadow-focus: 0 0 0 3px rgba(0, 166, 214, 0.35);
+
+  --hc-motion-fast: 120ms;
+  --hc-motion-default: 200ms;
+  --hc-motion-slow: 320ms;
+  --hc-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --hc-easing-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  --hc-breakpoint-mobile-max: 699px;
+  --hc-breakpoint-tablet-min: 700px;
+  --hc-breakpoint-tablet-max: 979px;
+  --hc-breakpoint-desktop-min: 980px;
+  --hc-breakpoint-wide-min: 1440px;
+
+  --hc-touch-minimum: 44px;
+  --hc-touch-preferred: 48px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

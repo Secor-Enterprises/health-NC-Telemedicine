@@ -1,0 +1,249 @@
+{
+  "labels": [
+    {
+      "name": "type: epic",
+      "color": "6F42C1",
+      "description": "Large outcome spanning multiple features or workstreams"
+    },
+    {
+      "name": "type: feature",
+      "color": "8250DF",
+      "description": "User- or business-facing capability"
+    },
+    {
+      "name": "type: story",
+      "color": "A371F7",
+      "description": "Deliverable user story with testable acceptance criteria"
+    },
+    {
+      "name": "type: task",
+      "color": "C5DEF5",
+      "description": "Implementation or operational task"
+    },
+    {
+      "name": "type: defect",
+      "color": "D73A4A",
+      "description": "Confirmed product or process defect"
+    },
+    {
+      "name": "type: documentation",
+      "color": "1D76DB",
+      "description": "Documentation creation or update"
+    },
+    {
+      "name": "type: research",
+      "color": "5319E7",
+      "description": "Discovery, spike, investigation or proof of concept"
+    },
+    {
+      "name": "type: governance",
+      "color": "7057FF",
+      "description": "Programme governance, reporting or decision forum"
+    },
+    {
+      "name": "type: risk",
+      "color": "B60205",
+      "description": "Risk, dependency or mitigation action"
+    },
+    {
+      "name": "type: decision",
+      "color": "0E8A16",
+      "description": "Architecture, product or governance decision"
+    },
+    {
+      "name": "priority: critical",
+      "color": "B60205",
+      "description": "Immediate attention; threatens safety, compliance or delivery"
+    },
+    {
+      "name": "priority: high",
+      "color": "D93F0B",
+      "description": "High-value or time-sensitive work"
+    },
+    {
+      "name": "priority: medium",
+      "color": "FBCA04",
+      "description": "Normal planned delivery priority"
+    },
+    {
+      "name": "priority: low",
+      "color": "0E8A16",
+      "description": "Useful but deferrable work"
+    },
+    {
+      "name": "area: ux-figma",
+      "color": "C2E0C6",
+      "description": "Figma, UX research, design system and prototyping"
+    },
+    {
+      "name": "area: frontend",
+      "color": "1D76DB",
+      "description": "Next.js, React, accessibility and client experience"
+    },
+    {
+      "name": "area: api",
+      "color": "0052CC",
+      "description": "Application APIs and service boundaries"
+    },
+    {
+      "name": "area: azure-sql",
+      "color": "0078D4",
+      "description": "Azure SQL schema, security, migrations and performance"
+    },
+    {
+      "name": "area: entra",
+      "color": "512BD4",
+      "description": "Microsoft Entra ID, enterprise application and RBAC"
+    },
+    {
+      "name": "area: teams",
+      "color": "6264A7",
+      "description": "Microsoft Teams, Graph and calendar integration"
+    },
+    {
+      "name": "area: whatsapp",
+      "color": "25D366",
+      "description": "WhatsApp Business patient engagement"
+    },
+    {
+      "name": "area: fhir",
+      "color": "00A6A6",
+      "description": "HL7 FHIR interoperability and clinical data exchange"
+    },
+    {
+      "name": "area: infrastructure",
+      "color": "0366D6",
+      "description": "Azure infrastructure, networking and platform engineering"
+    },
+    {
+      "name": "area: devops",
+      "color": "0E8A16",
+      "description": "CI/CD, GitHub Actions and release engineering"
+    },
+    {
+      "name": "area: security",
+      "color": "B60205",
+      "description": "Security engineering and vulnerability management"
+    },
+    {
+      "name": "area: testing",
+      "color": "FBCA04",
+      "description": "Quality engineering, test automation and validation"
+    },
+    {
+      "name": "area: governance",
+      "color": "7057FF",
+      "description": "Programme governance and stakeholder management"
+    },
+    {
+      "name": "area: compliance",
+      "color": "D4C5F9",
+      "description": "POPIA, audit, clinical governance and compliance"
+    },
+    {
+      "name": "area: training",
+      "color": "F9D0C4",
+      "description": "Training, adoption and operational enablement"
+    },
+    {
+      "name": "area: operations",
+      "color": "5319E7",
+      "description": "Support, monitoring, incident and service management"
+    },
+    {
+      "name": "status: ready",
+      "color": "0E8A16",
+      "description": "Refined, accepted and ready for implementation"
+    },
+    {
+      "name": "status: blocked",
+      "color": "B60205",
+      "description": "Cannot progress because of an unresolved dependency"
+    },
+    {
+      "name": "status: needs-review",
+      "color": "FBCA04",
+      "description": "Requires product, technical or stakeholder review"
+    },
+    {
+      "name": "status: needs-design",
+      "color": "C2E0C6",
+      "description": "Requires UX or Figma design before implementation"
+    },
+    {
+      "name": "status: needs-security-review",
+      "color": "D93F0B",
+      "description": "Requires security review or approval"
+    },
+    {
+      "name": "status: needs-clinical-review",
+      "color": "D4C5F9",
+      "description": "Requires clinical safety or workflow review"
+    },
+    {
+      "name": "env: development",
+      "color": "BFD4F2",
+      "description": "Development environment"
+    },
+    {
+      "name": "env: test",
+      "color": "D4C5F9",
+      "description": "Integrated test environment"
+    },
+    {
+      "name": "env: demo",
+      "color": "C2E0C6",
+      "description": "Executive demonstration environment"
+    },
+    {
+      "name": "env: pilot",
+      "color": "FBCA04",
+      "description": "Controlled pilot environment"
+    },
+    {
+      "name": "env: production",
+      "color": "B60205",
+      "description": "Production environment"
+    },
+    {
+      "name": "popia",
+      "color": "D93F0B",
+      "description": "Protection of Personal Information Act requirement"
+    },
+    {
+      "name": "accessibility",
+      "color": "1D76DB",
+      "description": "Accessibility and inclusive-design requirement"
+    },
+    {
+      "name": "localisation",
+      "color": "5319E7",
+      "description": "South African language localisation requirement"
+    },
+    {
+      "name": "sasL",
+      "color": "6F42C1",
+      "description": "South African Sign Language accessibility or interpreter workflow"
+    },
+    {
+      "name": "audit",
+      "color": "0052CC",
+      "description": "Audit evidence, logging or assurance requirement"
+    },
+    {
+      "name": "clinical-safety",
+      "color": "B60205",
+      "description": "Clinical safety, patient risk or clinical governance requirement"
+    },
+    {
+      "name": "breaking-change",
+      "color": "D73A4A",
+      "description": "Backward-incompatible change requiring controlled release"
+    },
+    {
+      "name": "technical-debt",
+      "color": "C5DEF5",
+      "description": "Technical debt or maintainability improvement"
+    }
+  ]
+}
