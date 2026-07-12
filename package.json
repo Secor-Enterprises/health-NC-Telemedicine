@@ -1,6 +1,6 @@
 {
   "name": "secor-healthconnect-mvp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -11,8 +11,11 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/**/*.test.ts",
+    "verify:export": "node scripts/verify-static-export.mjs",
     "validate:design": "node scripts/validate-design-handoff.mjs",
-    "validate:figma-plugin": "node --check tools/figma-healthconnect/code.js && node scripts/validate-figma-plugin.mjs"
+    "validate:figma-plugin": "node --check tools/figma-healthconnect/code.js && node scripts/validate-figma-plugin.mjs",
+    "check": "npm run validate:design && npm run validate:figma-plugin && npm run test && npm run typecheck && npm run build && npm run verify:export"
   },
   "dependencies": {
     "next": "16.2.10",
@@ -23,6 +26,7 @@
     "@types/node": "24.10.1",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
+    "tsx": "4.20.6",
     "typescript": "5.8.3"
   }
 }
