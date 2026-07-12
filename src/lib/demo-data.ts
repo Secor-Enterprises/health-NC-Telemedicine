@@ -19,10 +19,10 @@ export const roles: { id: Role; label: string; subtitle: string }[] = [
 
 export const languages = [
   "English", "Afrikaans", "isiZulu", "isiXhosa", "Sepedi", "Setswana",
-  "Sesotho", "ritsonga", "siSwati", "Tshivenda", "isiNdebele"
+  "Sesotho", "XiTsonga", "siSwati", "Tshivenda", "isiNdebele"
 ];
 
-export const dashboards: Record<Role, {
+export type Dashboard = {
   eyebrow: string;
   title: string;
   description: string;
@@ -30,7 +30,9 @@ export const dashboards: Record<Role, {
   queueTitle: string;
   queue: { name: string; detail: string; status: string }[];
   actions: string[];
-}> = {
+};
+
+export const dashboards: Record<Role, Dashboard> = {
   patient: {
     eyebrow: "My health",
     title: "Good morning, Naledi",
@@ -138,14 +140,14 @@ export const dashboards: Record<Role, {
     title: "Azure service health",
     description: "Deployment, identity, observability and security controls for the demo environment.",
     metrics: [
-      { label: "Services healthy", value: "12/12", change: "All regions" },
+      { label: "Services healthy", value: "12/12", change: "South Africa North" },
       { label: "Security score", value: "86%", change: "+4%" },
       { label: "Deployments", value: "3", change: "Last 24 hours" }
     ],
     queueTitle: "Platform events",
     queue: [
-      { name: "Entra ID", detail: "Conditional Access healthy", status: "Healthy" },
-      { name: "Supabase", detail: "RLS policy checks passed", status: "Healthy" },
+      { name: "Microsoft Entra ID", detail: "Conditional Access healthy", status: "Healthy" },
+      { name: "Azure SQL Database", detail: "RLS and threat detection active", status: "Healthy" },
       { name: "FHIR API", detail: "P95 latency 184ms", status: "Healthy" }
     ],
     actions: ["View deployments", "Open audit log", "Run readiness check"]
