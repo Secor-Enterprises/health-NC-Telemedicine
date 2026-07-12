@@ -11,31 +11,44 @@ DESCRIPTION="$(jq -r '.description' "$CONFIG")"
 command -v gh >/dev/null || { echo "gh CLI is required" >&2; exit 1; }
 command -v jq >/dev/null || { echo "jq is required" >&2; exit 1; }
 
-if [[ -z "${GH_TOKEN:-}" ]]; then
-  echo "PROJECTS_TOKEN is not configured; skipping organisation Project creation."
-  echo "Create an organisation-scoped token with Projects write access, save it as PROJECTS_TOKEN, and rerun this workflow."
+write_pending_summary() {
+  local reason="$1"
+  echo "$reason"
   if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
     {
       echo "## GitHub Project setup pending"
       echo
-      echo "The repository labels and milestones were applied. Organisation-level GitHub Projects require a token with Projects write access."
-      echo "Add the repository secret \`PROJECTS_TOKEN\` and rerun **Bootstrap Project Management**."
+      echo "$reason"
+      echo
+      echo "Repository labels and milestones are already managed. Add the repository secret \`PROJECTS_TOKEN\` with organisation Projects write permission and rerun **Bootstrap Project Management**."
     } >> "$GITHUB_STEP_SUMMARY"
   fi
+}
+
+if [[ -z "${GH_TOKEN:-}" ]]; then
+  write_pending_summary "No GitHub token was available for organisation Project provisioning."
   exit 0
 fi
 
 if ! gh project --help >/dev/null 2>&1; then
-  echo "The installed gh CLI does not provide project commands." >&2
-  exit 1
+  write_pending_summary "The installed GitHub CLI does not provide the required Project commands."
+  exit 0
 fi
 
-project_number="$(gh project list --owner "$OWNER" --limit 100 --format json \
-  | jq -r --arg title "$TITLE" '.projects[] | select(.title == $title) | .number' \
-  | head -n 1)"
+if ! project_list="$(gh project list --owner "$OWNER" --limit 100 --format json 2>/tmp/project-list-error.log)"; then
+  detail="$(tr '\n' ' ' </tmp/project-list-error.log | sed 's/[[:space:]]\+/ /g')"
+  write_pending_summary "The available token cannot manage organisation Projects. ${detail}"
+  exit 0
+fi
+
+project_number="$(jq -r --arg title "$TITLE" '.projects[] | select(.title == $title) | .number' <<<"$project_list" | head -n 1)"
 
 if [[ -z "$project_number" ]]; then
-  created="$(gh project create --owner "$OWNER" --title "$TITLE" --format json)"
+  if ! created="$(gh project create --owner "$OWNER" --title "$TITLE" --format json 2>/tmp/project-create-error.log)"; then
+    detail="$(tr '\n' ' ' </tmp/project-create-error.log | sed 's/[[:space:]]\+/ /g')"
+    write_pending_summary "The token could list Projects but could not create the enterprise Project. ${detail}"
+    exit 0
+  fi
   project_number="$(jq -r '.number' <<<"$created")"
   echo "Created project #$project_number: $TITLE"
 else
@@ -83,7 +96,6 @@ while IFS= read -r field; do
   echo "Created field: $name"
 done < <(jq -c '.fields[]' "$CONFIG")
 
-# Add all current open issues to the project. The operation is idempotent.
 while IFS= read -r issue_url; do
   [[ -z "$issue_url" ]] && continue
   gh project item-add "$project_number" --owner "$OWNER" --url "$issue_url" >/dev/null 2>&1 || true
@@ -98,7 +110,7 @@ if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
     echo "- Project: [$TITLE]($project_url)"
     echo "- Custom fields: created or verified"
     echo "- Open repository issues: added"
-    echo "- Views: configure from \`.github/project-management/project.json\` because GitHub does not expose full Project view creation through the supported CLI/API."
+    echo "- Views: configure from \`.github/project-management/project.json\`; GitHub does not expose complete Project view creation through the supported CLI/API."
   } >> "$GITHUB_STEP_SUMMARY"
 fi
 
