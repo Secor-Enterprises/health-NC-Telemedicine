@@ -17,7 +17,7 @@ env:
 
 jobs:
   validate:
-    name: Validate application
+    name: Validate application and design handoff
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -32,6 +32,9 @@ jobs:
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+
+      - name: Validate design-system handoff
+        run: npm run validate:design
 
       - name: Type-check active Next.js application
         run: npm run typecheck
