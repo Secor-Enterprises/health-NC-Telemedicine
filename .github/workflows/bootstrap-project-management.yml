@@ -51,5 +51,5 @@ jobs:
 
       - name: Create or update Project and custom fields
         env:
-          GH_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
+          GH_TOKEN: ${{ secrets.PROJECTS_TOKEN || github.token }}
         run: bash scripts/bootstrap-github-project.sh
