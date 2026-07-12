@@ -69,9 +69,9 @@
   ],
   "views": [
     { "name": "Executive Roadmap", "layout": "roadmap", "filter": "is:open", "group_by": "Milestone", "sort": "Planned finish" },
-    { "name": "Programme Backlog", "layout": "table", "filter": "-workflow:Done", "group_by": "Workstream", "sort": "Priority" },
-    { "name": "Current Sprint", "layout": "board", "filter": "sprint:@current", "group_by": "Workflow", "sort": "Priority" },
-    { "name": "Next Sprint", "layout": "board", "filter": "sprint:@next", "group_by": "Workflow", "sort": "Priority" },
+    { "name": "Programme Backlog", "layout": "table", "filter": "-Workflow:\"Done\"", "group_by": "Workstream", "sort": "Priority" },
+    { "name": "Current Sprint", "layout": "board", "filter": "Sprint:\"Sprint 01\" -Workflow:\"Done\"", "group_by": "Workflow", "sort": "Priority" },
+    { "name": "Next Sprint", "layout": "board", "filter": "Sprint:\"Sprint 02\" -Workflow:\"Done\"", "group_by": "Workflow", "sort": "Priority" },
     { "name": "Architecture and ADRs", "layout": "table", "filter": "label:\"type: decision\",label:\"type: documentation\"", "group_by": "Workstream" },
     { "name": "Security and Compliance", "layout": "board", "filter": "label:\"area: security\",label:\"area: compliance\",label:popia", "group_by": "Workflow" },
     { "name": "Integrations", "layout": "board", "filter": "label:\"area: teams\",label:\"area: whatsapp\",label:\"area: fhir\"", "group_by": "Workflow" },

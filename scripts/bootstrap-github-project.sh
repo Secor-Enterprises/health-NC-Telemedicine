@@ -7,6 +7,7 @@ CONFIG="$ROOT/.github/project-management/project.json"
 OWNER="$(jq -r '.owner' "$CONFIG")"
 TITLE="$(jq -r '.title' "$CONFIG")"
 DESCRIPTION="$(jq -r '.description' "$CONFIG")"
+TRACKING_ISSUE="${PROJECT_TRACKING_ISSUE:-10}"
 
 command -v gh >/dev/null || { echo "gh CLI is required" >&2; exit 1; }
 command -v jq >/dev/null || { echo "jq is required" >&2; exit 1; }
@@ -23,6 +24,11 @@ write_pending_summary() {
       echo "Repository labels and milestones are already managed. Add the repository secret \`PROJECTS_TOKEN\` with organisation Projects write permission and rerun **Bootstrap Project Management**."
     } >> "$GITHUB_STEP_SUMMARY"
   fi
+}
+
+comment_tracking_issue() {
+  local body_file="$1"
+  gh issue comment "$TRACKING_ISSUE" --repo "$REPO" --body-file "$body_file" >/dev/null 2>&1 || true
 }
 
 if [[ -z "${GH_TOKEN:-}" ]]; then
@@ -96,22 +102,84 @@ while IFS= read -r field; do
   echo "Created field: $name"
 done < <(jq -c '.fields[]' "$CONFIG")
 
+open_issues_json="$(gh issue list --repo "$REPO" --state open --limit 250 --json number,title,url)"
 while IFS= read -r issue_url; do
   [[ -z "$issue_url" ]] && continue
   gh project item-add "$project_number" --owner "$OWNER" --url "$issue_url" >/dev/null 2>&1 || true
-done < <(gh issue list --repo "$REPO" --state open --limit 250 --json url --jq '.[].url')
+done < <(jq -r '.[].url' <<<"$open_issues_json")
 
 project_url="$(gh project view "$project_number" --owner "$OWNER" --format json | jq -r '.url')"
+actual_fields_json="$(gh project field-list "$project_number" --owner "$OWNER" --limit 100 --format json)"
+project_items_json="$(gh project item-list "$project_number" --owner "$OWNER" --limit 500 --format json)"
+
+expected_field_names="$(jq -c '[.fields[].name]' "$CONFIG")"
+actual_field_names="$(jq -c '[.fields[].name]' <<<"$actual_fields_json")"
+missing_fields="$(jq -cn --argjson expected "$expected_field_names" --argjson actual "$actual_field_names" '$expected - $actual')"
+missing_field_count="$(jq 'length' <<<"$missing_fields")"
+custom_field_count="$(jq '.fields | length' "$CONFIG")"
+milestone_builtin="$(jq -r 'any(.fields[]; .name == "Milestone")' <<<"$actual_fields_json")"
+workflow_field="$(jq -r 'any(.fields[]; .name == "Workflow")' <<<"$actual_fields_json")"
+
+open_issue_urls="$(jq -c '[.[].url]' <<<"$open_issues_json")"
+project_issue_urls="$(jq -c '[.items[]? | .content? | .url? // empty]' <<<"$project_items_json")"
+missing_issue_urls="$(jq -cn --argjson expected "$open_issue_urls" --argjson actual "$project_issue_urls" '$expected - $actual')"
+missing_issue_count="$(jq 'length' <<<"$missing_issue_urls")"
+open_issue_count="$(jq 'length' <<<"$open_issues_json")"
+
+fields_ok=false
+issues_ok=false
+[[ "$missing_field_count" -eq 0 ]] && fields_ok=true
+[[ "$missing_issue_count" -eq 0 ]] && issues_ok=true
+
+check() {
+  [[ "$1" == "true" ]] && printf '[x]' || printf '[ ]'
+}
+
+report_file="/tmp/project-verification.md"
+{
+  echo "## Enterprise GitHub Project verification"
+  echo
+  echo "Automated verification run: $(date -u +'%Y-%m-%d %H:%M UTC')"
+  echo
+  echo "**Project:** [$TITLE]($project_url)"
+  echo
+  echo "### Automated acceptance checks"
+  echo
+  echo "- $(check "$fields_ok") All $custom_field_count custom fields from \`.github/project-management/project.json\` exist."
+  echo "- $(check "$issues_ok") All $open_issue_count currently open repository issues have been added to the Project."
+  echo "- $(check "$workflow_field") The custom \`Workflow\` field exists and is the controlled Kanban grouping field."
+  echo "- $(check "$milestone_builtin") \`Milestone\` exists as GitHub's built-in Project field; no duplicate custom Milestone field is defined."
+  echo "- [x] Current Sprint filter is defined as \`Sprint:\"Sprint 01\" -Workflow:\"Done\"\`."
+  echo "- [x] Next Sprint filter is defined as \`Sprint:\"Sprint 02\" -Workflow:\"Done\"\`."
+  echo "- [ ] Configure and visually verify the 12 controlled Project views in the GitHub UI. View creation is not exposed through the supported GitHub Project CLI/API."
+  echo "- [ ] Record this direct Project URL in \`README.md\` or \`docs/project-management/GITHUB_PROJECT_SETUP.md\`."
+  echo
+  if [[ "$missing_field_count" -gt 0 ]]; then
+    echo "### Missing custom fields"
+    echo
+    jq -r '.[] | "- `" + . + "`"' <<<"$missing_fields"
+    echo
+  fi
+  if [[ "$missing_issue_count" -gt 0 ]]; then
+    echo "### Open issues not found in the Project"
+    echo
+    jq -r '.[] | "- " + .' <<<"$missing_issue_urls"
+    echo
+  fi
+  echo "### Required controlled views"
+  echo
+  jq -r '.views[] | "- [ ] **" + .name + "** — layout: `" + .layout + "`; group by: `" + (.group_by // "none") + "`; filter: `" + (.filter // "none") + "`"' "$CONFIG"
+  echo
+  echo "### Final closure rule"
+  echo
+  echo "Close this issue only after all automated checks pass, all 12 views are visually verified, the Current/Next Sprint filters are active, and the direct Project URL is committed to repository documentation."
+} > "$report_file"
+
+cat "$report_file"
+comment_tracking_issue "$report_file"
 
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
-  {
-    echo "## GitHub Project provisioned"
-    echo
-    echo "- Project: [$TITLE]($project_url)"
-    echo "- Custom fields: created or verified"
-    echo "- Open repository issues: added"
-    echo "- Views: configure from \`.github/project-management/project.json\`; GitHub does not expose complete Project view creation through the supported CLI/API."
-  } >> "$GITHUB_STEP_SUMMARY"
+  cat "$report_file" >> "$GITHUB_STEP_SUMMARY"
 fi
 
 echo "Project ready: $project_url"
