@@ -1,16 +1,40 @@
-# Secor HealthConnect — MVP Demo
+# Secor HealthConnect — Northern Cape Telemedicine Demo
 
-A responsive, synthetic-data telemedicine portal demonstration for the Northern Cape programme.
+A responsive, role-aware telemedicine product demonstration for district hospitals and feeder clinics in the Northern Cape.
 
-## Included
+## Live application
 
-- Role switching for patient, doctor, nurse, specialist, administration, executive and Azure administration
-- Responsive desktop, tablet and mobile presentation
-- 11-language selector
-- Representative clinical and operational workflows
-- Entra ID, Teams, WhatsApp and FHIR integration placeholders
-- POPIA, audit, MFA and Row-Level Security indicators
-- Synthetic data only
+**GitHub Pages:** https://secor-enterprises.github.io/health-NC-Telemedicine/
+
+> The Pages workflow deploys automatically from `main`. GitHub Pages must be configured to use **GitHub Actions** as its source in the repository settings.
+
+## Demonstrated capabilities
+
+- Patient, doctor, nurse, specialist, administration, executive and Azure administration portals
+- Responsive desktop, tablet and mobile layouts
+- Eleven-language interface selector
+- Role switching for stakeholder demonstrations
+- Patient queues, triage, appointment and referral workflows
+- Executive operational and cost-saving indicators
+- Microsoft Entra ID, Teams and Microsoft Graph architecture
+- WhatsApp Business patient-engagement workflows
+- HL7 FHIR R4 interoperability boundary
+- Azure SQL Database data architecture
+- POPIA, MFA, audit, least-privilege and Row-Level Security indicators
+- Synthetic demonstration data only
+
+## Technology
+
+- Next.js App Router
+- React and TypeScript
+- Azure SQL Database
+- Microsoft Entra ID
+- Microsoft Graph and Teams
+- WhatsApp Business Platform
+- HL7 FHIR R4
+- Azure App Service or Azure Container Apps for the future Azure environment
+- Azure Key Vault, Monitor, Application Insights and Defender for Cloud
+- GitHub Actions and GitHub Pages for the public demonstration
 
 ## Run locally
 
@@ -21,15 +45,14 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Architecture direction
+## Build
 
-- Next.js App Router and TypeScript
-- Supabase/PostgreSQL with RLS
-- Microsoft Entra ID and Graph/Teams
-- WhatsApp Business Platform
-- HL7 FHIR R4 API boundary
-- Azure hosting, Key Vault, Monitor and CI/CD
+```bash
+npm run build
+```
 
-## Safety
+The static export is written to `out/` and is deployed by `.github/workflows/deploy-pages.yml`.
 
-This repository is a product demonstration. It must not be used for real clinical decisions or real patient data without formal clinical, security, privacy and regulatory validation.
+## Safety and limitations
+
+This repository is a synthetic product demonstration. It must not be used for real clinical decisions, real patient data or production health-service delivery without formal clinical, security, privacy, interoperability and regulatory validation.
