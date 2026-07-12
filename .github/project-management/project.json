@@ -1,0 +1,84 @@
+{
+  "title": "Secor HealthConnect Enterprise Delivery",
+  "owner": "Secor-Enterprises",
+  "description": "Primary engineering source of truth for the Northern Cape telemedicine programme.",
+  "fields": [
+    { "name": "Epic", "type": "TEXT" },
+    {
+      "name": "Workflow",
+      "type": "SINGLE_SELECT",
+      "options": [
+        "Intake",
+        "Triage",
+        "Approved",
+        "Ready",
+        "In Progress",
+        "In Review",
+        "Security Review",
+        "Clinical Review",
+        "Testing",
+        "Blocked",
+        "Ready for Release",
+        "Done"
+      ]
+    },
+    {
+      "name": "Sprint",
+      "type": "SINGLE_SELECT",
+      "options": [
+        "Sprint 01", "Sprint 02", "Sprint 03", "Sprint 04", "Sprint 05", "Sprint 06",
+        "Sprint 07", "Sprint 08", "Sprint 09", "Sprint 10", "Sprint 11", "Sprint 12",
+        "Sprint 13", "Sprint 14", "Sprint 15", "Sprint 16", "Sprint 17", "Sprint 18",
+        "Sprint 19", "Sprint 20", "Sprint 21", "Sprint 22", "Sprint 23", "Sprint 24"
+      ]
+    },
+    {
+      "name": "Workstream",
+      "type": "SINGLE_SELECT",
+      "options": [
+        "UX & Figma",
+        "Frontend",
+        "API",
+        "Azure SQL",
+        "Entra ID",
+        "Teams",
+        "WhatsApp",
+        "HL7 FHIR",
+        "Azure Infrastructure",
+        "DevSecOps",
+        "Security",
+        "Testing",
+        "Governance",
+        "Compliance",
+        "Training",
+        "Operations"
+      ]
+    },
+    { "name": "Priority", "type": "SINGLE_SELECT", "options": ["Critical", "High", "Medium", "Low"] },
+    { "name": "Risk rating", "type": "SINGLE_SELECT", "options": ["Critical", "High", "Medium", "Low"] },
+    { "name": "Story points", "type": "NUMBER" },
+    { "name": "Target environment", "type": "SINGLE_SELECT", "options": ["Development", "Test", "Demo", "Pilot", "Production"] },
+    { "name": "Clinical owner", "type": "TEXT" },
+    { "name": "Technical owner", "type": "TEXT" },
+    { "name": "Compliance owner", "type": "TEXT" },
+    { "name": "Planned start", "type": "DATE" },
+    { "name": "Planned finish", "type": "DATE" },
+    { "name": "Delivery confidence", "type": "SINGLE_SELECT", "options": ["Green", "Amber", "Red", "Not assessed"] },
+    { "name": "Release", "type": "TEXT" },
+    { "name": "Evidence link", "type": "TEXT" }
+  ],
+  "views": [
+    { "name": "Executive Roadmap", "layout": "roadmap", "filter": "is:open", "group_by": "Milestone", "sort": "Planned finish" },
+    { "name": "Programme Backlog", "layout": "table", "filter": "-workflow:Done", "group_by": "Workstream", "sort": "Priority" },
+    { "name": "Current Sprint", "layout": "board", "filter": "sprint:@current", "group_by": "Workflow", "sort": "Priority" },
+    { "name": "Next Sprint", "layout": "board", "filter": "sprint:@next", "group_by": "Workflow", "sort": "Priority" },
+    { "name": "Architecture and ADRs", "layout": "table", "filter": "label:\"type: decision\",label:\"type: documentation\"", "group_by": "Workstream" },
+    { "name": "Security and Compliance", "layout": "board", "filter": "label:\"area: security\",label:\"area: compliance\",label:popia", "group_by": "Workflow" },
+    { "name": "Integrations", "layout": "board", "filter": "label:\"area: teams\",label:\"area: whatsapp\",label:\"area: fhir\"", "group_by": "Workflow" },
+    { "name": "Azure Platform", "layout": "board", "filter": "label:\"area: azure-sql\",label:\"area: infrastructure\",label:\"area: devops\"", "group_by": "Workflow" },
+    { "name": "Testing and Defects", "layout": "board", "filter": "label:\"area: testing\",label:\"type: defect\"", "group_by": "Workflow" },
+    { "name": "Governance and Reporting", "layout": "table", "filter": "label:\"area: governance\",label:\"type: governance\"", "group_by": "Milestone" },
+    { "name": "Pilot Readiness", "layout": "table", "filter": "label:\"env: pilot\"", "group_by": "Workflow" },
+    { "name": "Production Readiness", "layout": "table", "filter": "label:\"env: production\"", "group_by": "Workflow" }
+  ]
+}
