@@ -1,8 +1,16 @@
 import type { NextConfig } from "next";
 
+const repo = "health-NC-Telemedicine";
+const isPages = process.env.GITHUB_ACTIONS === "true";
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  poweredByHeader: false
+  poweredByHeader: false,
+  output: "export",
+  trailingSlash: true,
+  images: { unoptimized: true },
+  basePath: isPages ? `/${repo}` : "",
+  assetPrefix: isPages ? `/${repo}/` : undefined
 };
 
 export default nextConfig;
