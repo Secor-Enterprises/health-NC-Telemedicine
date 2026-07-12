@@ -1,214 +1,86 @@
-"use client";
+import Link from "next/link";
+import { integrations, portalHref, portals, roleIds } from "@/lib/healthconnect";
 
-import { useMemo, useState } from "react";
-import { dashboards, languages, roles, type Role } from "@/lib/demo-data";
-
-function Icon({ name }: { name: string }) {
-  const symbols: Record<string, string> = {
-    home: "⌂",
-    calendar: "◫",
-    patient: "✚",
-    messages: "✦",
-    report: "▥",
-    shield: "◇",
-    bell: "●",
-    search: "⌕",
-  };
-
-  return <span aria-hidden="true">{symbols[name] ?? "•"}</span>;
-}
-
-export default function Home() {
-  const [role, setRole] = useState<Role>("doctor");
-  const [language, setLanguage] = useState("English");
-  const [toast, setToast] = useState<string | null>(null);
-  const dashboard = useMemo(() => dashboards[role], [role]);
-
-  function runAction(action: string) {
-    setToast(`${action} opened in demonstration mode.`);
-    window.setTimeout(() => setToast(null), 2400);
-  }
-
+export default function HomePage() {
   return (
-    <main className="app-shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-mark">S</div>
-          <div>
+    <main className="launch-page">
+      <header className="launch-header">
+        <div className="portal-brand">
+          <span className="portal-brand-mark" aria-hidden="true">S</span>
+          <span>
             <strong>Secor HealthConnect</strong>
-            <span>Northern Cape</span>
+            <small>Northern Cape digital-health demonstration</small>
+          </span>
+        </div>
+        <a className="launch-link" href="https://github.com/Secor-Enterprises/health-NC-Telemedicine">View repository</a>
+      </header>
+
+      <section className="launch-hero">
+        <div>
+          <span className="eyebrow">Enterprise telemedicine platform</span>
+          <h1>Connecting rural healthcare through governed digital workflows.</h1>
+          <p>
+            Explore seven responsive role portals, a cross-role care journey and explicit Azure, Entra,
+            Teams, WhatsApp and FHIR integration boundaries using synthetic demonstration data only.
+          </p>
+          <div className="launch-actions">
+            <Link className="launch-primary" href={portalHref("patient")}>Start patient journey</Link>
+            <Link className="launch-secondary" href={portalHref("doctor")}>Open clinical workspace</Link>
           </div>
         </div>
+        <aside className="launch-assurance" aria-label="Demonstration boundaries">
+          <strong>Demonstration boundaries</strong>
+          <ul>
+            <li>Synthetic data only</li>
+            <li>No production clinical transactions</li>
+            <li>Integrations clearly labelled as mocked</li>
+            <li>Clinical decisions remain human-reviewed</li>
+          </ul>
+        </aside>
+      </section>
 
-        <nav aria-label="Primary navigation">
-          {[
-            ["home", "Overview"],
-            ["calendar", "Appointments"],
-            ["patient", "Patients"],
-            ["messages", "Collaboration"],
-            ["report", "Analytics"],
-            ["shield", "Security"],
-          ].map(([icon, label], index) => (
-            <button className={index === 0 ? "nav-item active" : "nav-item"} key={label}>
-              <Icon name={icon} /> <span>{label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className="sidebar-foot">
-          <div className="network-status">
-            <span className="status-dot" />
-            <div>
-              <strong>Network healthy</strong>
-              <small>9 facilities connected</small>
-            </div>
-          </div>
-          <small>Synthetic demonstration data only</small>
+      <section className="portal-directory" aria-labelledby="portal-directory-title">
+        <div className="section-heading">
+          <span className="eyebrow">Role-based access</span>
+          <h2 id="portal-directory-title">Choose a portal</h2>
+          <p>Role switching is provided for stakeholder demonstrations. It is not an authorization control.</p>
         </div>
-      </aside>
-
-      <section className="workspace">
-        <header className="topbar">
-          <label className="search">
-            <Icon name="search" />
-            <input aria-label="Search" placeholder="Search patients, facilities or records" />
-          </label>
-          <div className="topbar-actions">
-            <select value={language} onChange={(event) => setLanguage(event.target.value)} aria-label="Language">
-              {languages.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-            <button className="icon-button" aria-label="Notifications">
-              <Icon name="bell" />
-            </button>
-            <div className="avatar">RM</div>
-          </div>
-        </header>
-
-        <div className="content">
-          <section className="hero">
-            <div>
-              <span className="eyebrow">{dashboard.eyebrow}</span>
-              <h1>{dashboard.title}</h1>
-              <p>{dashboard.description}</p>
-            </div>
-            <div className="role-picker">
-              <label htmlFor="role">Demo role</label>
-              <select id="role" value={role} onChange={(event) => setRole(event.target.value as Role)}>
-                {roles.map((item) => (
-                  <option value={item.id} key={item.id}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </section>
-
-          <section className="metrics" aria-label="Key metrics">
-            {dashboard.metrics.map((metric) => (
-              <article className="metric-card" key={metric.label}>
-                <span>{metric.label}</span>
-                <strong>{metric.value}</strong>
-                <small>{metric.change}</small>
-              </article>
-            ))}
-          </section>
-
-          <section className="main-grid">
-            <article className="panel queue-panel">
-              <div className="panel-head">
-                <div>
-                  <span className="eyebrow">Live workflow</span>
-                  <h2>{dashboard.queueTitle}</h2>
-                </div>
-                <button className="text-button">View all</button>
-              </div>
-              <div className="queue">
-                {dashboard.queue.map((item) => (
-                  <button className="queue-row" key={item.name} onClick={() => runAction(`Open ${item.name}`)}>
-                    <span className="queue-avatar">{item.name.slice(0, 2).toUpperCase()}</span>
-                    <span className="queue-copy">
-                      <strong>{item.name}</strong>
-                      <small>{item.detail}</small>
-                    </span>
-                    <span className={`badge ${item.status.toLowerCase().replace(" ", "-")}`}>{item.status}</span>
-                  </button>
-                ))}
-              </div>
-            </article>
-
-            <article className="panel action-panel">
-              <div className="panel-head">
-                <div>
-                  <span className="eyebrow">Quick actions</span>
-                  <h2>Continue your work</h2>
-                </div>
-              </div>
-              <div className="action-list">
-                {dashboard.actions.map((action, index) => (
-                  <button className={index === 0 ? "action primary" : "action"} onClick={() => runAction(action)} key={action}>
-                    <span>{action}</span>
-                    <b>→</b>
-                  </button>
-                ))}
-              </div>
-              <div className="integration-strip">
-                <span>Entra ID</span>
-                <span>Azure SQL</span>
-                <span>Teams</span>
-                <span>WhatsApp</span>
-                <span>FHIR R4</span>
-              </div>
-            </article>
-          </section>
-
-          <section className="lower-grid">
-            <article className="panel map-card">
-              <div className="panel-head">
-                <div>
-                  <span className="eyebrow">Facility network</span>
-                  <h2>Northern Cape coverage</h2>
-                </div>
-              </div>
-              <div className="map">
-                {["Upington", "Kuruman", "De Aar", "Springbok", "Calvinia", "Prieska"].map((place, index) => (
-                  <span className={`map-pin pin-${index + 1}`} key={place}>
-                    {place}
-                  </span>
-                ))}
-                <div className="map-road road-1" />
-                <div className="map-road road-2" />
-              </div>
-            </article>
-            <article className="panel compliance">
-              <div className="panel-head">
-                <div>
-                  <span className="eyebrow">Trust centre</span>
-                  <h2>Security posture</h2>
-                </div>
-              </div>
-              {[
-                ["POPIA controls", "Configured"],
-                ["MFA coverage", "100%"],
-                ["Audit events", "Streaming"],
-                ["Azure SQL RLS", "Validated"],
-              ].map(([label, value]) => (
-                <div className="compliance-row" key={label}>
-                  <span>{label}</span>
-                  <strong>{value}</strong>
-                </div>
-              ))}
-            </article>
-          </section>
+        <div className="portal-card-grid">
+          {roleIds.map((role, index) => {
+            const portal = portals[role];
+            return (
+              <Link className="portal-launch-card" href={portalHref(role)} key={role}>
+                <span className="portal-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                <span className="eyebrow">{portal.eyebrow}</span>
+                <h3>{portal.label}</h3>
+                <p>{portal.description}</p>
+                <span className="card-action">Open portal <span aria-hidden="true">→</span></span>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
-      {toast && (
-        <div role="status" className="toast">
-          {toast}
+      <section className="launch-integrations" aria-labelledby="integration-title">
+        <div className="section-heading">
+          <span className="eyebrow">Architecture boundary</span>
+          <h2 id="integration-title">Integration readiness</h2>
         </div>
-      )}
+        <div className="integration-card-grid">
+          {integrations.map((integration) => (
+            <article className="integration-card" key={integration.name}>
+              <span className="status-badge priority-routine">{integration.state}</span>
+              <h3>{integration.name}</h3>
+              <p>{integration.detail}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <footer className="launch-footer">
+        <span>Secor HealthConnect · Synthetic demonstration</span>
+        <span>GitHub Pages is not a production healthcare environment.</span>
+      </footer>
     </main>
   );
 }
