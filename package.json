@@ -11,7 +11,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "validate:design": "node scripts/validate-design-handoff.mjs"
+    "validate:design": "node scripts/validate-design-handoff.mjs",
+    "validate:figma-plugin": "node scripts/validate-figma-plugin.mjs"
   },
   "dependencies": {
     "next": "16.2.10",
