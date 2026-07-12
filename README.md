@@ -18,7 +18,24 @@ The engineering source of truth is the organisation-level GitHub Project **Secor
 - Controlled view runbook: `docs/project-management/VIEW_CONFIGURATION_RUNBOOK.md`
 - Project verification tracking: https://github.com/Secor-Enterprises/health-NC-Telemedicine/issues/10
 
-The direct Project URL must replace the organisation-directory link in `docs/project-management/PROJECT_URL.md` before issue #10 is closed. Azure Boards may consume synchronised or exported work items where required, but must not be maintained as a separate competing backlog.
+Azure Boards may consume synchronised or exported work items where required, but must not be maintained as a separate competing backlog.
+
+## Programme mobilisation baseline
+
+Milestone 01 governance, discovery and architecture evidence is maintained under `docs/programme/`:
+
+- Programme charter and benefits case
+- Stakeholder register, RACI and escalation model
+- Governance forums and stage gates
+- RAID register
+- Reporting calendar and SLAs
+- Initial clinical, facility, connectivity and integration discovery
+- Azure-native architecture, security and data-classification baseline
+- Milestone 01 completion and acceptance report
+
+See: `docs/programme/README.md`
+
+The repository mobilisation baseline is complete. Formal Department of Health, Steering Committee, clinical-governance, privacy, pilot and production approvals remain explicit later-stage gates.
 
 ## Demonstrated capabilities
 
