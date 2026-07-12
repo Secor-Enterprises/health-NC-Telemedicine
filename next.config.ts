@@ -10,7 +10,8 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   images: { unoptimized: true },
   basePath: isPages ? `/${repo}` : "",
-  assetPrefix: isPages ? `/${repo}/` : undefined
+  assetPrefix: isPages ? `/${repo}/` : undefined,
+  pageExtensions: ["page.tsx", "page.ts", "page.jsx", "page.js"]
 };
 
 export default nextConfig;
