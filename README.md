@@ -8,6 +8,18 @@ A responsive, role-aware telemedicine product demonstration for district hospita
 
 > The Pages workflow deploys automatically from `main`. GitHub Pages must be configured to use **GitHub Actions** as its source in the repository settings.
 
+## Enterprise project management
+
+The engineering source of truth is the organisation-level GitHub Project **Secor HealthConnect Enterprise Delivery**.
+
+- Organisation Projects directory: https://github.com/orgs/Secor-Enterprises/projects
+- Project setup and operating model: `docs/project-management/GITHUB_PROJECT_SETUP.md`
+- Project acceptance criteria: `docs/project-management/PROJECT_ACCEPTANCE_CRITERIA.md`
+- Controlled view runbook: `docs/project-management/VIEW_CONFIGURATION_RUNBOOK.md`
+- Project verification tracking: https://github.com/Secor-Enterprises/health-NC-Telemedicine/issues/10
+
+The direct Project URL must replace the organisation-directory link in `docs/project-management/PROJECT_URL.md` before issue #10 is closed. Azure Boards may consume synchronised or exported work items where required, but must not be maintained as a separate competing backlog.
+
 ## Demonstrated capabilities
 
 - Patient, doctor, nurse, specialist, administration, executive and Azure administration portals
