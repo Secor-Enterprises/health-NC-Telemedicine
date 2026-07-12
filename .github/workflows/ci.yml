@@ -8,14 +8,35 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  validate:
+    name: Validate application
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: npm
-      - run: npm install
-      - run: npm run build
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Type-check active Next.js application
+        run: npm run typecheck
+
+      - name: Build static application
+        run: npm run build
+
+      - name: Verify export artifact
+        run: test -f out/index.html
