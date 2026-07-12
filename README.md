@@ -40,8 +40,12 @@ The repository mobilisation baseline is complete. Formal Department of Health, S
 ## Figma and design-system handoff
 
 - Figma file: https://www.figma.com/design/3qDF55zDbiYe95zfNRjQuE
-- Figma/design issue: https://github.com/Secor-Enterprises/health-NC-Telemedicine/issues/11
+- Figma/design parent issue: https://github.com/Secor-Enterprises/health-NC-Telemedicine/issues/11
+- Canvas work items: issues #23–#28
+- Git LFS source backup: `design/source/figma/Secor-HealthConnect-Milestone-1-UX-Foundation.fig`
 - Design-system source of truth: `design/README.md`
+- Machine-readable acceptance register: `design/figma-acceptance.json`
+- Local Figma canvas plugin: `tools/figma-healthconnect/`
 - Design governance and handoff: `docs/design/README.md`
 - Node-specific frame register: `docs/design/FIGMA_FRAME_REGISTER.md`
 - Canvas implementation runbook: `docs/design/FIGMA_IMPLEMENTATION_RUNBOOK.md`
@@ -49,7 +53,7 @@ The repository mobilisation baseline is complete. Formal Department of Health, S
 - Localisation and SASL guidance: `docs/design/LOCALISATION_AND_SASL.md`
 - Clinical/security review: `docs/design/CLINICAL_SECURITY_REVIEW.md`
 
-The repository now contains canonical design tokens, CSS variables, component APIs, Figma-to-issue mappings and acceptance templates. Figma canvas component sets, variables and final review evidence remain controlled by issue #11 until verified.
+The repository contains canonical design tokens, CSS variables, component APIs, Figma-to-issue mappings, a Git LFS source backup, local canvas automation and acceptance templates. Run the local plugin in Figma Desktop and complete issues #23–#28 before closing issue #11.
 
 ## Demonstrated capabilities
 
@@ -88,9 +92,12 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Build
+## Validate and build
 
 ```bash
+npm run validate:design
+npm run validate:figma-plugin
+npm run typecheck
 npm run build
 ```
 

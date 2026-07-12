@@ -1,0 +1,68 @@
+{
+  "name": "Secor HealthConnect Figma Acceptance Register",
+  "version": "1.0.0",
+  "parentIssue": 11,
+  "milestone": 2,
+  "figmaFileKey": "3qDF55zDbiYe95zfNRjQuE",
+  "sourceBackup": "design/source/figma/Secor-HealthConnect-Milestone-1-UX-Foundation.fig",
+  "automation": "tools/figma-healthconnect/manifest.json",
+  "status": "implementation-ready",
+  "workItems": [
+    {
+      "issue": 23,
+      "name": "Variables and styles",
+      "automationCoverage": "implemented",
+      "canvasExecution": "pending",
+      "humanReview": "pending"
+    },
+    {
+      "issue": 24,
+      "name": "Components and icon strategy",
+      "automationCoverage": "starter-set-implemented",
+      "canvasExecution": "pending",
+      "humanReview": "pending",
+      "note": "Only workflow-required combinations should be added; avoid an unmaintainable Cartesian product."
+    },
+    {
+      "issue": 25,
+      "name": "Critical states and accessibility/localisation",
+      "automationCoverage": "implemented",
+      "canvasExecution": "pending",
+      "humanReview": "pending"
+    },
+    {
+      "issue": 26,
+      "name": "Responsive portals",
+      "automationCoverage": "implemented",
+      "canvasExecution": "pending",
+      "humanReview": "pending"
+    },
+    {
+      "issue": 27,
+      "name": "End-to-end prototype journey",
+      "automationCoverage": "implemented",
+      "canvasExecution": "pending",
+      "humanReview": "pending"
+    },
+    {
+      "issue": 28,
+      "name": "Screenshots and acceptance evidence",
+      "automationCoverage": "export-settings-only",
+      "canvasExecution": "pending",
+      "humanReview": "pending"
+    }
+  ],
+  "reviewDomains": [
+    "product",
+    "clinical",
+    "security-and-privacy",
+    "accessibility-and-localisation"
+  ],
+  "closureRules": [
+    "Do not close issue #11 until the plugin has been run against the canonical Figma file.",
+    "Do not close issue #11 until all seven desktop portals have recorded review decisions.",
+    "Do not close issue #11 until responsive journey evidence and screenshots are attached.",
+    "Do not close issue #11 while a critical clinical-safety, security, privacy or accessibility finding remains unresolved.",
+    "Use synthetic demonstration data only."
+  ]
+}

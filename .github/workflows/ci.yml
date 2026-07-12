@@ -17,7 +17,7 @@ env:
 
 jobs:
   validate:
-    name: Validate application and design handoff
+    name: Validate application, design handoff and Figma automation
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -35,6 +35,9 @@ jobs:
 
       - name: Validate design-system handoff
         run: npm run validate:design
+
+      - name: Validate Figma canvas automation
+        run: npm run validate:figma-plugin
 
       - name: Type-check active Next.js application
         run: npm run typecheck
