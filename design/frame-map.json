@@ -1,0 +1,69 @@
+{
+  "figmaFile": {
+    "name": "Secor HealthConnect — Milestone 1 UX Foundation",
+    "fileKey": "3qDF55zDbiYe95zfNRjQuE",
+    "url": "https://www.figma.com/design/3qDF55zDbiYe95zfNRjQuE"
+  },
+  "verifiedAt": "2026-07-12",
+  "pages": [
+    {
+      "id": "0:1",
+      "name": "Secor HealthConnect MVP Demo",
+      "status": "active",
+      "frames": [
+        { "id": "2:28", "name": "01 — Design System", "issue": 11, "purpose": "Current visual foundations and principles" },
+        { "id": "2:60", "name": "02 — Component Library", "issue": 11, "purpose": "Current detached component examples; migrate to governed local components" },
+        { "id": "4:2", "name": "Patient Desktop", "issue": 12, "viewport": "desktop", "status": "existing" },
+        { "id": "4:55", "name": "Doctor Desktop", "issue": 13, "viewport": "desktop", "status": "existing" },
+        { "id": "4:108", "name": "Nurse Desktop", "issue": 14, "viewport": "desktop", "status": "existing" },
+        { "id": "4:161", "name": "Specialist Desktop", "issue": 15, "viewport": "desktop", "status": "existing" },
+        { "id": "4:214", "name": "Administration Desktop", "issue": 16, "viewport": "desktop", "status": "existing" },
+        { "id": "4:267", "name": "Executive Desktop", "issue": 17, "viewport": "desktop", "status": "existing" },
+        { "id": "4:320", "name": "Azure Administration Desktop", "issue": 18, "viewport": "desktop", "status": "existing", "recommendedName": "Application Administration Desktop" },
+        { "id": "4:373", "name": "Patient Mobile", "issue": 12, "viewport": "mobile", "status": "existing" },
+        { "id": "4:391", "name": "Doctor Mobile", "issue": 13, "viewport": "mobile", "status": "existing" },
+        { "id": "4:409", "name": "Nurse Tablet", "issue": 14, "viewport": "tablet", "status": "existing" },
+        { "id": "4:431", "name": "Executive Tablet", "issue": 17, "viewport": "tablet", "status": "existing" },
+        { "id": "4:453", "name": "Prototype & Complete User Flows", "issue": 11, "viewport": "flow", "status": "existing" }
+      ]
+    },
+    {
+      "id": "14:2",
+      "name": "02 Additional MVP Flows",
+      "status": "empty at latest verified inspection",
+      "plannedFrames": [
+        { "name": "Secure Sign-in", "issues": [11, 18, 19] },
+        { "name": "MFA Verification", "issues": [11, 18, 19] },
+        { "name": "Language and Accessibility Preferences", "issues": [11, 12, 19] },
+        { "name": "POPIA Consent and Privacy Notice", "issues": [11, 12, 19] },
+        { "name": "Patient Registration and Appointment Booking", "issues": [11, 12, 16] },
+        { "name": "Virtual Waiting Room and Readiness", "issues": [11, 12, 13] },
+        { "name": "Nurse Intake, Triage and Vitals", "issues": [11, 14] },
+        { "name": "Teams-enabled Doctor Consultation", "issues": [11, 13] },
+        { "name": "Specialist Referral and MDT Review", "issues": [11, 15] },
+        { "name": "Prescription, Laboratory and Imaging Follow-up", "issues": [11, 12, 13, 15] },
+        { "name": "Administration, Audit and Platform Health", "issues": [11, 16, 18] },
+        { "name": "Critical System States", "issues": [11, 19] }
+      ]
+    }
+  ],
+  "requiredNewPages": [
+    { "name": "03 Foundations & Tokens", "issue": 11 },
+    { "name": "04 Components & Variants", "issue": 11 },
+    { "name": "05 Critical States", "issue": 11 },
+    { "name": "06 Accessibility & Localisation", "issue": 11 },
+    { "name": "07 Developer Handoff", "issues": [11, 19] }
+  ],
+  "codeIssueMap": {
+    "11": "UX/Figma and design-system handoff",
+    "12": "Patient portal",
+    "13": "Doctor portal",
+    "14": "Nurse portal",
+    "15": "Specialist portal",
+    "16": "Facility administration portal",
+    "17": "Provincial executive portal",
+    "18": "Application administration portal",
+    "19": "Next.js role-based application platform"
+  },
+  "acceptanceRule": "A frame is approved only when its node-specific link, viewport, owner, review status and implementation issue are recorded."
+}

@@ -37,11 +37,25 @@ See: `docs/programme/README.md`
 
 The repository mobilisation baseline is complete. Formal Department of Health, Steering Committee, clinical-governance, privacy, pilot and production approvals remain explicit later-stage gates.
 
+## Figma and design-system handoff
+
+- Figma file: https://www.figma.com/design/3qDF55zDbiYe95zfNRjQuE
+- Figma/design issue: https://github.com/Secor-Enterprises/health-NC-Telemedicine/issues/11
+- Design-system source of truth: `design/README.md`
+- Design governance and handoff: `docs/design/README.md`
+- Node-specific frame register: `docs/design/FIGMA_FRAME_REGISTER.md`
+- Canvas implementation runbook: `docs/design/FIGMA_IMPLEMENTATION_RUNBOOK.md`
+- Accessibility checklist: `docs/design/ACCESSIBILITY_CHECKLIST.md`
+- Localisation and SASL guidance: `docs/design/LOCALISATION_AND_SASL.md`
+- Clinical/security review: `docs/design/CLINICAL_SECURITY_REVIEW.md`
+
+The repository now contains canonical design tokens, CSS variables, component APIs, Figma-to-issue mappings and acceptance templates. Figma canvas component sets, variables and final review evidence remain controlled by issue #11 until verified.
+
 ## Demonstrated capabilities
 
-- Patient, doctor, nurse, specialist, administration, executive and Azure administration portals
+- Patient, doctor, nurse, specialist, facility administration, provincial executive and application administration portals
 - Responsive desktop, tablet and mobile layouts
-- Eleven-language interface selector
+- Eleven written-language interface plan plus SASL accessibility and interpreter workflows
 - Role switching for stakeholder demonstrations
 - Patient queues, triage, appointment and referral workflows
 - Executive operational and cost-saving indicators

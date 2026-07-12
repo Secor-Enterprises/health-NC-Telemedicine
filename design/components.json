@@ -1,0 +1,207 @@
+{
+  "name": "Secor HealthConnect Component Inventory",
+  "version": "1.0.0",
+  "status": "candidate",
+  "naming": {
+    "component": "PascalCase",
+    "variant": "Property=Value",
+    "layer": "Semantic names; avoid Rectangle 1, Frame 42 and copied portal-specific names",
+    "code": "React component names must align to the Figma component family"
+  },
+  "components": [
+    {
+      "name": "Button",
+      "issue": 19,
+      "variants": {
+        "Style": ["Primary", "Secondary", "Tertiary", "Danger"],
+        "Size": ["Small", "Medium", "Large"],
+        "State": ["Default", "Hover", "Focus", "Pressed", "Loading", "Disabled"],
+        "Icon": ["None", "Leading", "Trailing", "Only"]
+      },
+      "properties": ["Label", "Icon", "Disabled", "Loading"],
+      "minimumTarget": 44,
+      "notes": "Loading retains the label context and exposes an accessible status. Icon-only buttons require an accessible name."
+    },
+    {
+      "name": "TextField",
+      "issue": 19,
+      "variants": {
+        "Type": ["Text", "Search", "Number", "Date", "Password"],
+        "State": ["Empty", "Filled", "Focus", "Error", "Disabled", "ReadOnly"],
+        "Support": ["None", "Helper", "Warning", "Error"]
+      },
+      "properties": ["Label", "Value", "Placeholder", "Helper text", "Required", "Leading icon", "Trailing action"],
+      "notes": "Labels remain visible. Error states include text and icon, never colour alone."
+    },
+    {
+      "name": "SelectField",
+      "issue": 19,
+      "variants": {
+        "State": ["Empty", "Selected", "Focus", "Error", "Disabled"],
+        "Mode": ["Single", "Language", "Role", "Facility"]
+      },
+      "properties": ["Label", "Value", "Placeholder", "Helper text", "Required"],
+      "notes": "Language names are displayed in their own language where approved."
+    },
+    {
+      "name": "StatusBadge",
+      "issue": 19,
+      "variants": {
+        "Tone": ["Neutral", "Information", "Success", "Warning", "Danger"],
+        "State": ["Default", "Interactive", "Disabled"],
+        "Icon": ["None", "Leading"]
+      },
+      "properties": ["Label", "Icon"],
+      "notes": "Pair tone with explicit status text. Urgency and clinical status cannot rely on colour alone."
+    },
+    {
+      "name": "IntegrationStatus",
+      "issue": 18,
+      "variants": {
+        "Integration": ["Entra", "AzureSQL", "Teams", "WhatsApp", "FHIR", "Azure"],
+        "Status": ["Live", "Sandbox", "Mocked", "Unavailable", "Disabled"]
+      },
+      "properties": ["Label", "Status", "Last checked", "Details"],
+      "notes": "Never imply an integration is operational when it is mocked or unavailable."
+    },
+    {
+      "name": "MetricCard",
+      "issue": 17,
+      "variants": {
+        "Trend": ["Positive", "Neutral", "Negative", "NotAvailable"],
+        "Density": ["Comfortable", "Compact"],
+        "State": ["Default", "Loading", "Stale", "Error"]
+      },
+      "properties": ["Label", "Value", "Change", "Period", "Definition link", "Data date"],
+      "notes": "Executive metrics disclose source, refresh date and synthetic/unvalidated status."
+    },
+    {
+      "name": "Panel",
+      "issue": 19,
+      "variants": {
+        "Surface": ["Default", "Raised", "Tinted"],
+        "Padding": ["Compact", "Default", "Spacious"],
+        "State": ["Default", "Loading", "Empty", "Error", "PermissionDenied"]
+      },
+      "properties": ["Eyebrow", "Title", "Description", "Action", "Body slot"],
+      "notes": "Portal sections use a shared Panel rather than copied frames."
+    },
+    {
+      "name": "QueueRow",
+      "issue": 16,
+      "variants": {
+        "Priority": ["Routine", "Attention", "Urgent"],
+        "State": ["Waiting", "Ready", "InProgress", "Completed", "Cancelled"],
+        "Density": ["Comfortable", "Compact"]
+      },
+      "properties": ["Patient or case label", "Details", "Wait time", "Status", "Avatar", "Action"],
+      "notes": "The row must support patient, referral and incident queues without exposing unnecessary identifiers."
+    },
+    {
+      "name": "NavigationItem",
+      "issue": 19,
+      "variants": {
+        "State": ["Default", "Hover", "Focus", "Selected", "Disabled"],
+        "Level": ["Primary", "Secondary"],
+        "Collapsed": ["False", "True"]
+      },
+      "properties": ["Label", "Icon", "Badge", "Accessible name"],
+      "notes": "Collapsed navigation retains tooltips and accessible names."
+    },
+    {
+      "name": "AppShell",
+      "issue": 19,
+      "variants": {
+        "Viewport": ["Desktop", "Tablet", "Mobile"],
+        "Navigation": ["Expanded", "Collapsed", "Hidden"],
+        "Connectivity": ["Online", "Degraded", "Offline"]
+      },
+      "properties": ["Role", "Facility", "Language", "User", "Content slot"],
+      "notes": "Role visibility is not authorization. Connected implementations validate role and facility context server-side."
+    },
+    {
+      "name": "SystemState",
+      "issue": 19,
+      "variants": {
+        "Type": ["Loading", "Empty", "Error", "Offline", "Degraded", "PermissionDenied", "SessionExpired", "Maintenance"],
+        "Scope": ["Page", "Panel", "Inline"],
+        "Action": ["None", "Retry", "Reconnect", "SignIn", "ContactSupport"]
+      },
+      "properties": ["Title", "Description", "Action label", "Reference ID", "Last updated"],
+      "notes": "Error text avoids exposing internal stack traces, identifiers or clinical data."
+    },
+    {
+      "name": "ConsentNotice",
+      "issue": 12,
+      "variants": {
+        "Purpose": ["Privacy", "Teleconsultation", "WhatsApp", "DocumentUpload", "Interpreter"],
+        "State": ["NotReviewed", "Accepted", "Declined", "Expired", "Updated"]
+      },
+      "properties": ["Title", "Summary", "Version", "Effective date", "Actions"],
+      "notes": "Consent is purpose-specific, versioned and auditable. It is not used as a substitute for another lawful basis."
+    },
+    {
+      "name": "ClinicalAlert",
+      "issue": 13,
+      "variants": {
+        "Severity": ["Information", "Attention", "Urgent", "Critical"],
+        "State": ["New", "Acknowledged", "Resolved", "Stale"],
+        "Source": ["ClinicalRule", "Observation", "PatientReported", "Integration"]
+      },
+      "properties": ["Title", "Description", "Source", "Timestamp", "Required action", "Limitations"],
+      "notes": "Clinical alerts remain advisory and require human review."
+    },
+    {
+      "name": "VitalsCard",
+      "issue": 14,
+      "variants": {
+        "Status": ["WithinRange", "Attention", "Urgent", "Unknown"],
+        "Trend": ["Stable", "Rising", "Falling", "InsufficientData"],
+        "State": ["Default", "Editing", "ValidationError", "Saved"]
+      },
+      "properties": ["Observation", "Value", "Unit", "Reference range", "Recorded by", "Recorded at"],
+      "notes": "Reference ranges and alert thresholds require clinical approval before pilot use."
+    },
+    {
+      "name": "ReferralCard",
+      "issue": 15,
+      "variants": {
+        "Urgency": ["Routine", "Priority", "Urgent"],
+        "State": ["Draft", "Submitted", "Accepted", "InformationRequested", "Scheduled", "Completed", "Declined"]
+      },
+      "properties": ["Speciality", "Reason", "Facility", "Age", "Status", "Next action"],
+      "notes": "State changes are auditable and visible to the referring team."
+    },
+    {
+      "name": "DataTable",
+      "issue": 18,
+      "variants": {
+        "Density": ["Comfortable", "Compact"],
+        "Selection": ["None", "Single", "Multiple"],
+        "State": ["Default", "Loading", "Empty", "Error", "PermissionDenied"]
+      },
+      "properties": ["Columns", "Rows", "Sort", "Filter", "Pagination", "Caption"],
+      "notes": "Provide a caption, keyboard navigation, meaningful headers and a mobile alternative."
+    },
+    {
+      "name": "ModalDialog",
+      "issue": 19,
+      "variants": {
+        "Purpose": ["Confirm", "Form", "Warning", "Destructive", "Information"],
+        "Size": ["Small", "Medium", "Large"]
+      },
+      "properties": ["Title", "Description", "Body slot", "Primary action", "Secondary action"],
+      "notes": "Focus is trapped, initial focus is deliberate and focus returns to the trigger."
+    },
+    {
+      "name": "ToastNotification",
+      "issue": 19,
+      "variants": {
+        "Tone": ["Information", "Success", "Warning", "Danger"],
+        "Persistence": ["Temporary", "Persistent"]
+      },
+      "properties": ["Message", "Action", "Dismiss"],
+      "notes": "Announcements use an appropriate live-region priority and do not disappear before users can read them."
+    }
+  ]
+}
