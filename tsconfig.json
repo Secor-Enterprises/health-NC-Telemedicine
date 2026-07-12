@@ -25,15 +25,5 @@
     "src/lib/demo-data.ts",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "src/pages/**",
-    "src/components/**",
-    "src/hooks/**",
-    "src/integrations/**",
-    "src/test/**",
-    "src/App.tsx",
-    "src/main.tsx",
-    "vite.config.ts"
-  ]
+  "exclude": ["node_modules"]
 }
