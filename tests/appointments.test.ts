@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createSyntheticConfirmation, initialAppointmentDraft, validateAppointmentDraft } from "../src/lib/appointments";
+import { createSyntheticConfirmation, getDefaultService, initialAppointmentDraft, validateAppointmentDraft } from "../src/lib/appointments";
 
 test("appointment draft requires consent", () => {
   const errors = validateAppointmentDraft(initialAppointmentDraft);
@@ -25,4 +25,19 @@ test("empty appointment fields return accessible validation messages", () => {
     consentAccepted: false
   });
   assert.equal(errors.length, 5);
+});
+
+test("service must be offered by the selected facility", () => {
+  const errors = validateAppointmentDraft({
+    ...initialAppointmentDraft,
+    facilityId: "upington",
+    service: "Hypertension follow-up",
+    consentAccepted: true
+  });
+  assert.ok(errors.includes("Select a service offered by the selected facility."));
+});
+
+test("facility changes have a valid default service", () => {
+  assert.equal(getDefaultService("upington"), "General medicine");
+  assert.equal(getDefaultService("missing"), "");
 });
