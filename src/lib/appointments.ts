@@ -50,20 +50,38 @@ export const initialAppointmentDraft: AppointmentDraft = {
   reason: "Routine follow-up and blood-pressure review"
 };
 
+export function getFacility(facilityId: string): FacilityOption | undefined {
+  return facilities.find((item) => item.id === facilityId);
+}
+
+export function getDefaultService(facilityId: string): string {
+  return getFacility(facilityId)?.services[0] ?? "";
+}
+
 export function validateAppointmentDraft(draft: AppointmentDraft): string[] {
   const errors: string[] = [];
-  if (!draft.facilityId) errors.push("Select a facility.");
-  if (!draft.service.trim()) errors.push("Select or enter a service.");
-  if (!draft.slotId) errors.push("Select an appointment time.");
+  const facility = getFacility(draft.facilityId);
+
+  if (!facility) errors.push("Select a valid facility.");
+  if (!draft.service.trim()) {
+    errors.push("Select or enter a service.");
+  } else if (facility && !facility.services.includes(draft.service)) {
+    errors.push("Select a service offered by the selected facility.");
+  }
+  if (!draft.slotId || !appointmentSlots.some((slot) => slot.id === draft.slotId)) {
+    errors.push("Select a valid appointment time.");
+  }
   if (!draft.reason.trim()) errors.push("Provide a short reason for the appointment.");
   if (!draft.consentAccepted) errors.push("Accept the synthetic demonstration privacy notice.");
   return errors;
 }
 
 export function createSyntheticConfirmation(draft: AppointmentDraft) {
-  const facility = facilities.find((item) => item.id === draft.facilityId);
-  const slot = appointmentSlots.find((item) => item.id === draft.slotId);
-  if (!facility || !slot) throw new Error("Invalid synthetic appointment selection.");
+  const errors = validateAppointmentDraft(draft);
+  if (errors.length > 0) throw new Error("Invalid synthetic appointment selection.");
+  const facility = getFacility(draft.facilityId)!;
+  const slot = appointmentSlots.find((item) => item.id === draft.slotId)!;
+
   return {
     reference: `HC-DEMO-${slot.id.toUpperCase()}`,
     facility: facility.name,
