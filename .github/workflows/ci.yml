@@ -17,7 +17,7 @@ env:
 
 jobs:
   validate:
-    name: Validate application, design handoff and Figma automation
+    name: Validate application, design handoff and portal routes
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -39,11 +39,14 @@ jobs:
       - name: Validate Figma canvas automation
         run: npm run validate:figma-plugin
 
+      - name: Run role portal domain tests
+        run: npm run test
+
       - name: Type-check active Next.js application
         run: npm run typecheck
 
       - name: Build static application
         run: npm run build
 
-      - name: Verify export artifact
-        run: test -f out/index.html
+      - name: Verify all static portal routes
+        run: npm run verify:export
