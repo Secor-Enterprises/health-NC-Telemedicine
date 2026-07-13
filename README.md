@@ -55,6 +55,27 @@ The repository mobilisation baseline is complete. Formal Department of Health, S
 
 The repository contains canonical design tokens, CSS variables, component APIs, Figma-to-issue mappings, a Git LFS source backup, local canvas automation and acceptance templates. Run the local plugin in Figma Desktop and complete issues #23–#28 before closing issue #11.
 
+## Role portal application
+
+The role portal foundation is implemented through issue #19 and PR #30.
+
+- Portal implementation: `docs/application/ROLE_PORTAL_IMPLEMENTATION.md`
+- Demonstration script: `docs/application/DEMONSTRATION_SCRIPT.md`
+- Acceptance status: `docs/application/ACCEPTANCE_STATUS.md`
+- Release checklist: `docs/application/RELEASE_CHECKLIST.md`
+- Review record: `docs/application/REVIEW_RECORD.md`
+- Deployment verification: `docs/application/DEPLOYMENT_VERIFICATION.md`
+
+Static role routes:
+
+- `/portals/patient/`
+- `/portals/doctor/`
+- `/portals/nurse/`
+- `/portals/specialist/`
+- `/portals/administration/`
+- `/portals/executive/`
+- `/portals/platform-admin/`
+
 ## Demonstrated capabilities
 
 - Patient, doctor, nurse, specialist, facility administration, provincial executive and application administration portals
@@ -97,8 +118,16 @@ Open `http://localhost:3000`.
 ```bash
 npm run validate:design
 npm run validate:figma-plugin
+npm run test
 npm run typecheck
 npm run build
+npm run verify:export
+```
+
+Run the full validation sequence with:
+
+```bash
+npm run check
 ```
 
 The static export is written to `out/` and is deployed by `.github/workflows/deploy-pages.yml`.
