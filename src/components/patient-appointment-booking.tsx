@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
-import { appointmentSlots, createSyntheticConfirmation, facilities, initialAppointmentDraft, validateAppointmentDraft, type AppointmentDraft } from "@/lib/appointments";
+import { appointmentSlots, createSyntheticConfirmation, facilities, getDefaultService, initialAppointmentDraft, validateAppointmentDraft, type AppointmentDraft } from "@/lib/appointments";
 import { languages } from "@/lib/healthconnect";
 
 export function PatientAppointmentBooking() {
@@ -13,6 +13,12 @@ export function PatientAppointmentBooking() {
 
   function update<K extends keyof AppointmentDraft>(key: K, value: AppointmentDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
+    setErrors([]);
+    setConfirmation(null);
+  }
+
+  function changeFacility(facilityId: string) {
+    setDraft((current) => ({ ...current, facilityId, service: getDefaultService(facilityId) }));
     setErrors([]);
     setConfirmation(null);
   }
@@ -41,7 +47,7 @@ export function PatientAppointmentBooking() {
           <div className="panel-heading"><div><span className="eyebrow">Step 1 of 3</span><h2>Appointment details</h2></div></div>
           {errors.length > 0 && <div className="form-errors" role="alert"><strong>Review the following:</strong><ul>{errors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
 
-          <label className="field-stack"><span>Facility</span><select value={draft.facilityId} onChange={(event) => update("facilityId", event.target.value)}>{facilities.map((facility) => <option value={facility.id} key={facility.id}>{facility.name} · {facility.district}</option>)}</select></label>
+          <label className="field-stack"><span>Facility</span><select value={draft.facilityId} onChange={(event) => changeFacility(event.target.value)}>{facilities.map((facility) => <option value={facility.id} key={facility.id}>{facility.name} · {facility.district}</option>)}</select></label>
           <label className="field-stack"><span>Service</span><select value={draft.service} onChange={(event) => update("service", event.target.value)}>{(selectedFacility?.services ?? []).map((service) => <option key={service}>{service}</option>)}</select></label>
 
           <fieldset className="field-stack"><legend>Appointment time</legend><div className="slot-grid">{appointmentSlots.map((slot) => <label className={draft.slotId === slot.id ? "slot-card selected" : "slot-card"} key={slot.id}><input type="radio" name="slot" value={slot.id} checked={draft.slotId === slot.id} onChange={() => { update("slotId", slot.id); update("mode", slot.mode); }} /><strong>{slot.label}</strong><span>{slot.clinician}</span><small>{slot.mode.replace("-", " ")}</small></label>)}</div></fieldset>
